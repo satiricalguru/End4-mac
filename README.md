@@ -24,21 +24,21 @@
 ## 🌟 Key Highlights
 
 ```
- ┌─────────────────────────────────────────────────────────────────────────────┐
- │                             FLOATING STATUS BAR                             │
- │   [⊞ Workspaces]            [12:45 PM • 33°C]            [♫  ⚡85%  📶  🔔]  │
- └─────────────────────────────────────────────────────────────────────────────┘
- ┌──────────────────────┐                           ┌──────────────────────────┐
- │   LEFT QUICK-PANEL   │                           │    RIGHT MEDIA & AI      │
- │  • Wi-Fi / Bluetooth │    ╭─────────────────╮    │  • Now Playing Card      │
- │  • DND / Night Shift │    │   COOKIE CLOCK  │    │  • Synchronized Lyrics   │
- │  • 120fps Sliders    │    │ (M3 7-Scallop)  │    │  • AI Assistant (Ollama) │
- │  • 5-Day Weather     │    ╰─────────────────╯    │  • CPU / RAM Live Meters │
- └──────────────────────┘                           └──────────────────────────┘
- ┌─────────────────────────────────────────────────────────────────────────────┐
- │                      LIVE WALLPAPER & SHADER ENGINE                         │
- │     [Aurora Borealis]  •  [Fluid Waves]  •  [Cosmic Stars]  •  [Retro Grid] │
- └─────────────────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                             FLOATING STATUS BAR                             │
+│   [Workspaces]              [12:45 PM | 33°C]         [Media | 85% | Wi-Fi] │
+└─────────────────────────────────────────────────────────────────────────────┘
+┌───────────────────────┐  ┌─────────────────────┐  ┌─────────────────────────┐
+│   LEFT QUICK-PANEL    │  │    COOKIE CLOCK     │  │    RIGHT MEDIA & AI     │
+│  • Wi-Fi / Bluetooth  │  │                     │  │  • Now Playing Card     │
+│  • DND / Night Shift  │  │   (M3 7-Scallop)    │  │  • Synchronized Lyrics  │
+│  • 120fps Sliders     │  │   Analog + Date     │  │  • AI Assistant (Chat)  │
+│  • 5-Day Weather      │  │                     │  │  • CPU / RAM Live Gauge │
+└───────────────────────┘  └─────────────────────┘  └─────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                       LIVE WALLPAPER & SHADER ENGINE                        │
+│      [Aurora Borealis]   [Fluid Waves]   [Cosmic Stars]   [Retro Grid]      │
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---

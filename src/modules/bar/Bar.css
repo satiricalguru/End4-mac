@@ -1,0 +1,190 @@
+.bar {
+  position: fixed;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: var(--z-bar);
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: 4px 6px;
+  border-radius: var(--md-shape-full);
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: var(--glass-border);
+  box-shadow: var(--md-elevation-2);
+  height: 40px;
+  min-width: 500px;
+  max-width: 90vw;
+  transition: all var(--md-motion-duration-medium2) var(--md-motion-easing-emphasized);
+  animation: barSlideIn 0.6s var(--md-motion-easing-emphasized-decelerate) both;
+}
+
+@keyframes barSlideIn {
+  from {
+    transform: translateX(-50%) translateY(-60px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+}
+
+.bar:hover {
+  box-shadow: var(--md-elevation-3);
+}
+
+/* ── Bar Sections ──────────────────────────────────────── */
+.bar__left,
+.bar__center,
+.bar__right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.bar__left {
+  flex: 0 0 auto;
+}
+
+.bar__center {
+  flex: 1;
+  justify-content: center;
+}
+
+.bar__right {
+  flex: 0 0 auto;
+}
+
+/* ── Bar Widget (individual item) ──────────────────────── */
+.bar-widget {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: var(--md-shape-full);
+  cursor: pointer;
+  transition: all var(--md-motion-duration-short4) var(--md-motion-easing-standard);
+  position: relative;
+  color: var(--md-on-surface);
+  font: var(--md-label-medium);
+  white-space: nowrap;
+}
+
+.bar-widget:hover {
+  background: color-mix(in srgb, var(--md-on-surface) 8%, transparent);
+}
+
+.bar-widget:active {
+  background: color-mix(in srgb, var(--md-on-surface) 12%, transparent);
+  transform: scale(0.96);
+}
+
+.bar-widget .icon {
+  font-size: 18px;
+  color: var(--md-primary);
+}
+
+.bar-widget__label {
+  font: var(--md-label-medium);
+  color: var(--md-on-surface);
+}
+
+/* ── Clock Widget (bigger, centered) ───────────────────── */
+.bar-widget--clock {
+  padding: 4px 16px;
+}
+
+.bar-widget--clock .clock__time {
+  font: var(--md-title-small);
+  font-weight: 600;
+  color: var(--md-on-surface);
+  letter-spacing: 0.5px;
+}
+
+.bar-widget--clock .clock__date {
+  font: var(--md-label-small);
+  color: var(--md-on-surface-variant);
+  margin-left: 8px;
+}
+
+/* ── Workspace Indicators ──────────────────────────────── */
+.workspaces {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+}
+
+.workspace-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--md-outline-variant);
+  transition: all var(--md-motion-duration-short4) var(--md-motion-easing-standard);
+  cursor: pointer;
+}
+
+.workspace-dot--active {
+  width: 20px;
+  border-radius: var(--md-shape-full);
+  background: var(--md-primary);
+}
+
+.workspace-dot:hover {
+  background: var(--md-on-surface-variant);
+}
+
+/* ── Media Marquee in Bar ──────────────────────────────── */
+.bar-widget--media {
+  max-width: 160px;
+  overflow: hidden;
+}
+
+.bar-widget--media .media-marquee {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  animation: none;
+}
+
+.bar-widget--media .media-marquee.scrolling .media-marquee__text {
+  animation: marquee 10s linear infinite;
+}
+
+.media-marquee__text {
+  white-space: nowrap;
+}
+
+/* ── Divider ───────────────────────────────────────────── */
+.bar__divider {
+  width: 1px;
+  height: 18px;
+  background: var(--md-outline-variant);
+  opacity: 0.4;
+  margin: 0 2px;
+}
+
+/* ── Battery color states ──────────────────────────────── */
+.bar-widget--battery .icon.charging {
+  color: #4caf50;
+}
+
+.bar-widget--battery .icon.low {
+  color: var(--md-error);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* ── Sidebar trigger zones (invisible) ─────────────────── */
+.bar__sidebar-trigger {
+  position: fixed;
+  top: 0;
+  width: 4px;
+  height: 100vh;
+  z-index: calc(var(--z-bar) - 1);
+}
+
+.bar__sidebar-trigger--left { left: 0; }
+.bar__sidebar-trigger--right { right: 0; }

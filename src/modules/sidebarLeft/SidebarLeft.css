@@ -1,0 +1,312 @@
+.sidebar-left {
+  position: fixed;
+  top: 56px;
+  left: 12px;
+  bottom: 12px;
+  width: 380px;
+  z-index: var(--z-sidebar);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding: var(--space-lg);
+  border-radius: var(--md-shape-xl);
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: var(--glass-border);
+  box-shadow: var(--md-elevation-3);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* ── Sidebar Backdrop (click to close) ─────────────────── */
+.sidebar-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: calc(var(--z-sidebar) - 1);
+  background: transparent;
+}
+
+/* ── Quick Toggles Grid ────────────────────────────────── */
+.quick-toggles {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-sm);
+}
+
+.quick-toggle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 14px 8px;
+  border-radius: var(--md-shape-lg);
+  background: var(--md-surface-container);
+  cursor: pointer;
+  transition: background var(--md-motion-duration-short4) var(--md-motion-easing-standard),
+              box-shadow var(--md-motion-duration-short4) var(--md-motion-easing-standard),
+              transform var(--md-motion-duration-short2) var(--md-motion-easing-standard);
+  border: 1px solid var(--glass-border-light);
+}
+
+.quick-toggle:hover {
+  background: var(--md-surface-container-high);
+}
+
+.quick-toggle:active {
+  transform: scale(0.94);
+}
+
+.quick-toggle--active {
+  background: var(--md-primary-container);
+  border-color: color-mix(in srgb, var(--md-primary) 40%, transparent);
+  box-shadow: 0 4px 16px color-mix(in srgb, var(--md-primary) 28%, transparent);
+}
+
+.quick-toggle--active .quick-toggle__icon {
+  color: var(--md-on-primary-container);
+  transform: scale(1.08);
+}
+
+.quick-toggle--active .quick-toggle__label {
+  color: var(--md-on-primary-container);
+  font-weight: 600;
+}
+
+.quick-toggle__icon {
+  font-size: 24px;
+  color: var(--md-on-surface-variant);
+  transition: transform var(--md-motion-duration-short2) var(--md-motion-easing-standard),
+              color var(--md-motion-duration-short2) var(--md-motion-easing-standard);
+}
+
+.quick-toggle__label {
+  font: var(--md-label-small);
+  color: var(--md-on-surface-variant);
+  text-align: center;
+}
+
+/* ── Slider Widget ─────────────────────────────────────── */
+.slider-widget {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: 10px 14px;
+  border-radius: var(--md-shape-lg);
+  background: var(--md-surface-container);
+  border: 1px solid var(--glass-border-light);
+  transition: background var(--md-motion-duration-short2) var(--md-motion-easing-standard);
+}
+
+.slider-widget:hover {
+  background: var(--md-surface-container-high);
+}
+
+.slider-widget .icon {
+  font-size: 20px;
+  color: var(--md-primary);
+  flex-shrink: 0;
+  transition: transform var(--md-motion-duration-short2) var(--md-motion-easing-standard);
+}
+
+.slider-widget .icon:hover {
+  transform: scale(1.15);
+}
+
+.slider-widget input[type="range"] {
+  flex: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: var(--md-shape-full);
+  outline: none;
+  cursor: pointer;
+  transition: opacity var(--md-motion-duration-short2) var(--md-motion-easing-standard);
+}
+
+.slider-widget input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--md-primary);
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  transition: transform var(--md-motion-duration-short2) var(--md-motion-easing-standard),
+              box-shadow var(--md-motion-duration-short2) var(--md-motion-easing-standard);
+}
+
+.slider-widget input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.25);
+  box-shadow: 0 3px 12px color-mix(in srgb, var(--md-primary) 50%, transparent);
+}
+
+.slider-widget input[type="range"]::-webkit-slider-thumb:active {
+  transform: scale(1.35);
+}
+
+.slider-widget__value {
+  font: var(--md-label-medium);
+  color: var(--md-on-surface);
+  min-width: 32px;
+  text-align: right;
+}
+
+/* ── Calendar Widget ───────────────────────────────────── */
+.calendar-widget {
+  border-radius: var(--md-shape-lg);
+  background: var(--md-surface-container);
+  padding: var(--space-md);
+}
+
+.calendar-widget__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-sm);
+}
+
+.calendar-widget__title {
+  font: var(--md-title-small);
+  color: var(--md-on-surface);
+}
+
+.calendar-widget__nav {
+  display: flex;
+  gap: 4px;
+}
+
+.calendar-widget__nav button {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background var(--md-motion-duration-short2) var(--md-motion-easing-standard);
+}
+
+.calendar-widget__nav button:hover {
+  background: var(--md-surface-container-high);
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  text-align: center;
+}
+
+.calendar-grid__day-name {
+  font: var(--md-label-small);
+  color: var(--md-on-surface-variant);
+  padding: 4px;
+}
+
+.calendar-grid__day {
+  font: var(--md-body-small);
+  color: var(--md-on-surface);
+  padding: 4px;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  cursor: pointer;
+  transition: all var(--md-motion-duration-short2) var(--md-motion-easing-standard);
+}
+
+.calendar-grid__day:hover {
+  background: var(--md-surface-container-high);
+}
+
+.calendar-grid__day--today {
+  background: var(--md-primary);
+  color: var(--md-on-primary);
+  font-weight: 600;
+}
+
+.calendar-grid__day--other-month {
+  color: var(--md-outline);
+  opacity: 0.5;
+}
+
+/* ── Weather Widget ────────────────────────────────────── */
+.weather-widget {
+  border-radius: var(--md-shape-lg);
+  background: var(--md-surface-container);
+  padding: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.weather-widget__current {
+  display: flex;
+  align-items: center;
+  gap: var(--space-lg);
+}
+
+.weather-widget__temp {
+  font: var(--md-display-small);
+  color: var(--md-on-surface);
+}
+
+.weather-widget__details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.weather-widget__detail {
+  font: var(--md-body-small);
+  color: var(--md-on-surface-variant);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.weather-widget__forecast {
+  display: flex;
+  gap: var(--space-sm);
+  justify-content: space-between;
+}
+
+.weather-forecast-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  font: var(--md-label-small);
+  color: var(--md-on-surface-variant);
+}
+
+.weather-forecast-day .icon {
+  font-size: 20px;
+  color: var(--md-primary);
+}
+
+.weather-forecast-day__temps {
+  display: flex;
+  gap: 4px;
+  font: var(--md-label-small);
+}
+
+.weather-forecast-day__high {
+  color: var(--md-on-surface);
+}
+
+.weather-forecast-day__low {
+  color: var(--md-outline);
+}
+
+/* ── Section Header ────────────────────────────────────── */
+.sidebar-section-header {
+  font: var(--md-title-small);
+  color: var(--md-on-surface-variant);
+  padding: 4px 4px 0;
+}

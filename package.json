@@ -1,0 +1,45 @@
+{
+  "name": "end4-mac",
+  "private": true,
+  "version": "1.0.0",
+  "description": "A macOS-native recreation inspired by end4-pC / illogical-impulse, redesigned for macOS",
+  "license": "MIT",
+  "main": "electron/main.cjs",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "oxlint",
+    "preview": "vite preview",
+    "electron": "electron .",
+    "electron:dev": "concurrently \"vite\" \"sleep 2 && electron . --dev\"",
+    "start": "electron ."
+  },
+  "dependencies": {
+    "framer-motion": "^13.1.1",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.4",
+    "concurrently": "^9.2.4",
+    "electron": "^43.4.1",
+    "electron-builder": "^26.15.3",
+    "oxlint": "^1.75.0",
+    "vite": "^8.2.0"
+  },
+  "build": {
+    "appId": "com.pctrade.end4-pc-mac",
+    "productName": "end4-pC Shell",
+    "mac": {
+      "target": "dmg",
+      "category": "public.app-category.utilities"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*"
+    ]
+  }
+}

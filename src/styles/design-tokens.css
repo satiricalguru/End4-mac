@@ -1,0 +1,226 @@
+/* ============================================================
+   end4-pC — Material 3 Expressive Design Tokens
+   ============================================================
+   Dynamic color system: all --md-* variables are overridden
+   at runtime by MaterialTheme.jsx when extracting wallpaper
+   colors. The defaults below provide a rich teal/purple
+   palette as fallback.
+   ============================================================ */
+
+:root {
+  /* ── Primary ─────────────────────────────────────────── */
+  --md-primary: #7dd3c0;
+  --md-on-primary: #003731;
+  --md-primary-container: #1b5e50;
+  --md-on-primary-container: #9af0dc;
+
+  /* ── Secondary ───────────────────────────────────────── */
+  --md-secondary: #b3ccc4;
+  --md-on-secondary: #1f352f;
+  --md-secondary-container: #354b45;
+  --md-on-secondary-container: #cfe9e0;
+
+  /* ── Tertiary ────────────────────────────────────────── */
+  --md-tertiary: #aecbe3;
+  --md-on-tertiary: #163349;
+  --md-tertiary-container: #2e4a60;
+  --md-on-tertiary-container: #cae6ff;
+
+  /* ── Error ───────────────────────────────────────────── */
+  --md-error: #ffb4ab;
+  --md-on-error: #690005;
+  --md-error-container: #93000a;
+  --md-on-error-container: #ffdad6;
+
+  /* ── Surface (dark theme default) ────────────────────── */
+  --md-surface: #0e1513;
+  --md-on-surface: #dde4e0;
+  --md-surface-variant: #3f4945;
+  --md-on-surface-variant: #bec9c4;
+
+  /* ── Surface Tones ───────────────────────────────────── */
+  --md-surface-dim: #0e1513;
+  --md-surface-bright: #343b38;
+  --md-surface-container-lowest: #090f0d;
+  --md-surface-container-low: #161d1b;
+  --md-surface-container: #1a211f;
+  --md-surface-container-high: #252b29;
+  --md-surface-container-highest: #2f3634;
+
+  /* ── Outline ─────────────────────────────────────────── */
+  --md-outline: #89938f;
+  --md-outline-variant: #3f4945;
+
+  /* ── Inverse ─────────────────────────────────────────── */
+  --md-inverse-surface: #dde4e0;
+  --md-inverse-on-surface: #2b3230;
+  --md-inverse-primary: #006b5c;
+
+  /* ── Fixed Colors ────────────────────────────────────── */
+  --md-primary-fixed: #9af0dc;
+  --md-primary-fixed-dim: #7dd3c0;
+  --md-on-primary-fixed: #002019;
+  --md-on-primary-fixed-variant: #1b5e50;
+
+  --md-secondary-fixed: #cfe9e0;
+  --md-secondary-fixed-dim: #b3ccc4;
+  --md-on-secondary-fixed: #07201a;
+  --md-on-secondary-fixed-variant: #354b45;
+
+  --md-tertiary-fixed: #cae6ff;
+  --md-tertiary-fixed-dim: #aecbe3;
+  --md-on-tertiary-fixed: #001e31;
+  --md-on-tertiary-fixed-variant: #2e4a60;
+
+  /* ── Scrim & Shadow ──────────────────────────────────── */
+  --md-scrim: #000000;
+  --md-shadow: #000000;
+
+  /* ── Typography ──────────────────────────────────────── */
+  --md-font-brand: 'Google Sans', 'Product Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --md-font-plain: 'Google Sans Text', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --md-font-mono: 'Google Sans Mono', 'JetBrains Mono', 'SF Mono', monospace;
+  --md-font-icon: 'Material Symbols Rounded';
+
+  /* Display */
+  --md-display-large: 700 57px/64px var(--md-font-brand);
+  --md-display-medium: 700 45px/52px var(--md-font-brand);
+  --md-display-small: 600 36px/44px var(--md-font-brand);
+
+  /* Headline */
+  --md-headline-large: 600 32px/40px var(--md-font-brand);
+  --md-headline-medium: 600 28px/36px var(--md-font-brand);
+  --md-headline-small: 600 24px/32px var(--md-font-brand);
+
+  /* Title */
+  --md-title-large: 500 22px/28px var(--md-font-brand);
+  --md-title-medium: 500 16px/24px var(--md-font-brand);
+  --md-title-small: 500 14px/20px var(--md-font-brand);
+
+  /* Label */
+  --md-label-large: 500 14px/20px var(--md-font-plain);
+  --md-label-medium: 500 12px/16px var(--md-font-plain);
+  --md-label-small: 500 11px/16px var(--md-font-plain);
+
+  /* Body */
+  --md-body-large: 400 16px/24px var(--md-font-plain);
+  --md-body-medium: 400 14px/20px var(--md-font-plain);
+  --md-body-small: 400 12px/16px var(--md-font-plain);
+
+  /* ── Shape ───────────────────────────────────────────── */
+  --md-shape-none: 0px;
+  --md-shape-xs: 4px;
+  --md-shape-sm: 8px;
+  --md-shape-md: 12px;
+  --md-shape-lg: 16px;
+  --md-shape-xl: 28px;
+  --md-shape-full: 9999px;
+
+  /* ── Elevation (using box-shadow for layering) ───────── */
+  --md-elevation-0: none;
+  --md-elevation-1: 0 1px 3px 1px rgba(0,0,0,0.15), 0 1px 2px 0 rgba(0,0,0,0.3);
+  --md-elevation-2: 0 2px 6px 2px rgba(0,0,0,0.15), 0 1px 2px 0 rgba(0,0,0,0.3);
+  --md-elevation-3: 0 1px 3px 0 rgba(0,0,0,0.3), 0 4px 8px 3px rgba(0,0,0,0.15);
+  --md-elevation-4: 0 2px 3px 0 rgba(0,0,0,0.3), 0 6px 10px 4px rgba(0,0,0,0.15);
+  --md-elevation-5: 0 4px 4px 0 rgba(0,0,0,0.3), 0 8px 12px 6px rgba(0,0,0,0.15);
+
+  /* ── Motion ──────────────────────────────────────────── */
+  --md-motion-duration-short1: 50ms;
+  --md-motion-duration-short2: 100ms;
+  --md-motion-duration-short3: 150ms;
+  --md-motion-duration-short4: 200ms;
+  --md-motion-duration-medium1: 250ms;
+  --md-motion-duration-medium2: 300ms;
+  --md-motion-duration-medium3: 350ms;
+  --md-motion-duration-medium4: 400ms;
+  --md-motion-duration-long1: 450ms;
+  --md-motion-duration-long2: 500ms;
+  --md-motion-duration-long3: 550ms;
+  --md-motion-duration-long4: 600ms;
+  --md-motion-duration-extra-long1: 700ms;
+  --md-motion-duration-extra-long2: 800ms;
+  --md-motion-duration-extra-long3: 900ms;
+  --md-motion-duration-extra-long4: 1000ms;
+
+  /* Easing */
+  --md-motion-easing-standard: cubic-bezier(0.2, 0, 0, 1);
+  --md-motion-easing-standard-decelerate: cubic-bezier(0, 0, 0, 1);
+  --md-motion-easing-standard-accelerate: cubic-bezier(0.3, 0, 1, 1);
+  --md-motion-easing-emphasized: cubic-bezier(0.2, 0, 0, 1);
+  --md-motion-easing-emphasized-decelerate: cubic-bezier(0.05, 0.7, 0.1, 1);
+  --md-motion-easing-emphasized-accelerate: cubic-bezier(0.3, 0, 0.8, 0.15);
+  --md-motion-easing-legacy: cubic-bezier(0.4, 0, 0.2, 1);
+  --md-motion-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+  /* ── Glassmorphism ───────────────────────────────────── */
+  --glass-blur: 40px;
+  --glass-bg: rgba(14, 21, 19, 0.72);
+  --glass-bg-heavy: rgba(14, 21, 19, 0.88);
+  --glass-bg-light: rgba(14, 21, 19, 0.5);
+  --glass-border: 1px solid rgba(255, 255, 255, 0.08);
+  --glass-border-light: 1px solid rgba(255, 255, 255, 0.12);
+
+  /* ── Spacing ─────────────────────────────────────────── */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 24px;
+  --space-2xl: 32px;
+  --space-3xl: 48px;
+
+  /* ── Z-Index Layers ──────────────────────────────────── */
+  --z-background: 0;
+  --z-surface: 10;
+  --z-bar: 100;
+  --z-dock: 100;
+  --z-sidebar: 200;
+  --z-overlay: 300;
+  --z-notification: 400;
+  --z-osd: 500;
+  --z-modal: 600;
+}
+
+/* ── Light Theme Override ─────────────────────────────── */
+[data-theme="light"] {
+  --md-primary: #006b5c;
+  --md-on-primary: #ffffff;
+  --md-primary-container: #9af0dc;
+  --md-on-primary-container: #002019;
+
+  --md-secondary: #4b635c;
+  --md-on-secondary: #ffffff;
+  --md-secondary-container: #cfe9e0;
+  --md-on-secondary-container: #07201a;
+
+  --md-tertiary: #456179;
+  --md-on-tertiary: #ffffff;
+  --md-tertiary-container: #cae6ff;
+  --md-on-tertiary-container: #001e31;
+
+  --md-surface: #f5fbf7;
+  --md-on-surface: #171d1b;
+  --md-surface-variant: #dbe5e0;
+  --md-on-surface-variant: #3f4945;
+
+  --md-surface-dim: #d5dbd8;
+  --md-surface-bright: #f5fbf7;
+  --md-surface-container-lowest: #ffffff;
+  --md-surface-container-low: #eff5f1;
+  --md-surface-container: #e9efec;
+  --md-surface-container-high: #e3eae6;
+  --md-surface-container-highest: #dde4e0;
+
+  --md-outline: #6f7975;
+  --md-outline-variant: #bec9c4;
+
+  --md-inverse-surface: #2b3230;
+  --md-inverse-on-surface: #ecf2ee;
+  --md-inverse-primary: #7dd3c0;
+
+  --glass-bg: rgba(245, 251, 247, 0.78);
+  --glass-bg-heavy: rgba(245, 251, 247, 0.92);
+  --glass-bg-light: rgba(245, 251, 247, 0.55);
+  --glass-border: 1px solid rgba(0, 0, 0, 0.06);
+  --glass-border-light: 1px solid rgba(0, 0, 0, 0.1);
+}

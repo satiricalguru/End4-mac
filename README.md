@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="public/app-icon.svg" width="120" height="120" alt="End4-mac App Icon" />
+
 # 💠 End4-mac
 
 ### *A macOS-native recreation inspired by end4-pC / illogical-impulse, redesigned for macOS using modern desktop architecture.*

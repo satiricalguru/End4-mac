@@ -192,9 +192,84 @@ End4-mac implements the **Material 3 Expressive Design System**:
 
 ---
 
+## 👥 Contributors & Credits
+
+This macOS port builds upon the foundation and creative work of the developers and contributors of the upstream [end4-pC](https://github.com/pctrade/end4-pC) repository and [illogical-impulse](https://github.com/end-4/dots-hyprland). Sincere gratitude to all contributors for their widgets, designs, and ideas!
+
+### 🌟 Upstream `pctrade/end4-pC` Contributors
+
+<table>
+  <tr>
+    <td align="center">
+      <a href="https://github.com/pctrade">
+        <img src="https://avatars.githubusercontent.com/u/185014097?v=4" width="75px;" alt="pctrade"/><br />
+        <sub><b>pctrade</b></sub>
+      </a><br />
+      <sub>Creator & Maintainer</sub>
+    </td>
+    <td align="center">
+      <a href="https://github.com/anaskhaann">
+        <img src="https://avatars.githubusercontent.com/u/119879801?v=4" width="75px;" alt="anaskhaann"/><br />
+        <sub><b>Mohd Anas Khan</b></sub>
+      </a><br />
+      <sub>Contributor</sub>
+    </td>
+    <td align="center">
+      <a href="https://github.com/reazndev">
+        <img src="https://avatars.githubusercontent.com/u/142885331?v=4" width="75px;" alt="reazndev"/><br />
+        <sub><b>Reazndev</b></sub>
+      </a><br />
+      <sub>Contributor</sub>
+    </td>
+    <td align="center">
+      <a href="https://github.com/Naguuw">
+        <img src="https://avatars.githubusercontent.com/u/245409364?v=4" width="75px;" alt="Naguuw"/><br />
+        <sub><b>Naguuw</b></sub>
+      </a><br />
+      <sub>Contributor</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <a href="https://github.com/XephyLon">
+        <img src="https://avatars.githubusercontent.com/u/37638392?v=4" width="75px;" alt="XephyLon"/><br />
+        <sub><b>Xephy Lon</b></sub>
+      </a><br />
+      <sub>Contributor</sub>
+    </td>
+    <td align="center">
+      <a href="https://github.com/hassankhan2608">
+        <img src="https://avatars.githubusercontent.com/u/149296407?v=4" width="75px;" alt="hassankhan2608"/><br />
+        <sub><b>hassankhan2608</b></sub>
+      </a><br />
+      <sub>Contributor</sub>
+    </td>
+    <td align="center">
+      <a href="https://github.com/tura-ai-agent">
+        <img src="https://avatars.githubusercontent.com/u/302527399?v=4" width="75px;" alt="tura-ai-agent"/><br />
+        <sub><b>tura-ai-agent</b></sub>
+      </a><br />
+      <sub>Contributor</sub>
+    </td>
+    <td align="center">
+      <a href="https://github.com/end-4">
+        <img src="https://avatars.githubusercontent.com/u/8980455?v=4" width="75px;" alt="end-4"/><br />
+        <sub><b>end-4</b></sub>
+      </a><br />
+      <sub>Original Concept</sub>
+    </td>
+  </tr>
+</table>
+
+### 🍎 macOS Port Maintainer
+- **[Jatin Pandey (@satiricalguru)](https://github.com/satiricalguru)** — macOS native port architecture, Electron main process, React 19 modules, and shaders.
+
+---
+
 ## 🤝 Acknowledgements
 
-- **[end-4](https://github.com/end-4)** for the original Linux [illogical-impulse / dots-hyprland](https://github.com/end-4/dots-hyprland) and [end4-pC](https://github.com/pctrade/end4-pC) concept.
+- **[pctrade](https://github.com/pctrade)** & **[end4-pC contributors](https://github.com/pctrade/end4-pC/graphs/contributors)** for the upstream desktop rice.
+- **[end-4](https://github.com/end-4)** for the original Linux [illogical-impulse / dots-hyprland](https://github.com/end-4/dots-hyprland).
 - **[LRCLIB](https://lrclib.net)** for the open-source synchronized lyrics database.
 - **[Wallhaven](https://wallhaven.cc)** for high-resolution desktop wallpapers.
 - **[Open-Meteo](https://open-meteo.com)** for free weather forecasts.

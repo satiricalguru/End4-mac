@@ -74,6 +74,21 @@
   font-weight: 600;
 }
 
+.quick-toggle--unsupported,
+.slider-widget--unsupported {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+.quick-toggle--unsupported:hover,
+.slider-widget--unsupported:hover {
+  background: var(--md-surface-container);
+}
+
+.slider-widget--unsupported input[type="range"] {
+  cursor: not-allowed;
+}
+
 .quick-toggle__icon {
   font-size: 24px;
   color: var(--md-on-surface-variant);

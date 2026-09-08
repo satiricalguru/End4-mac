@@ -3,17 +3,22 @@
   "private": true,
   "version": "1.0.0",
   "description": "A macOS-native recreation inspired by end4-pC / illogical-impulse, redesigned for macOS",
-  "license": "MIT",
+  "author": "Jatin Pandey",
+  "license": "GPL-3.0-or-later",
   "main": "electron/main.cjs",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "lint": "oxlint",
+    "test": "node --test test/*.test.cjs",
+    "check": "npm run lint && npm test && npm run build",
     "preview": "vite preview",
     "electron": "electron .",
     "electron:dev": "concurrently \"vite\" \"sleep 2 && electron . --dev\"",
-    "start": "electron ."
+    "start": "electron .",
+    "pack:mac": "npm run build && CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --mac dir",
+    "dist:mac": "npm run build && electron-builder --mac dmg --arm64 --x64"
   },
   "dependencies": {
     "framer-motion": "^13.1.1",
@@ -33,9 +38,19 @@
   "build": {
     "appId": "com.pctrade.end4-pc-mac",
     "productName": "end4-pC Shell",
+    "artifactName": "end4-pC-Shell-${version}-${arch}.${ext}",
+    "directories": {
+      "output": "release"
+    },
     "mac": {
       "target": "dmg",
-      "category": "public.app-category.utilities"
+      "category": "public.app-category.utilities",
+      "icon": "build/icon.icns",
+      "minimumSystemVersion": "12.0",
+      "extendInfo": {
+        "NSAppleEventsUsageDescription": "end4-pC Shell uses Apple Events to read and control media, volume, appearance, and wallpaper settings.",
+        "NSLocationWhenInUseUsageDescription": "end4-pC Shell uses your approximate location to show local weather."
+      }
     },
     "files": [
       "dist/**/*",

@@ -44,13 +44,13 @@ export function useBattery() {
     if (window.electronAPI?.getBattery) {
       return window.electronAPI.getBattery();
     }
-    // Fallback for browser dev mode
     return {
-      percentage: 85,
+      supported: false,
+      percentage: null,
       isCharging: false,
       isCharged: false,
-      isOnBattery: true,
-      icon: 'battery_5_bar',
+      isOnBattery: false,
+      icon: 'battery_unknown',
     };
   }, []);
 
@@ -65,7 +65,7 @@ export function useAudio() {
     if (window.electronAPI?.getAudio) {
       return window.electronAPI.getAudio();
     }
-    return { volume: 72, isMuted: false, icon: 'volume_up' };
+    return { supported: false, volume: null, isMuted: false, icon: 'volume_off' };
   }, []);
 
   const { data, loading, error, refresh } = usePolling(fetchAudio, 3000);
@@ -95,13 +95,7 @@ export function useNetwork() {
     if (window.electronAPI?.getNetwork) {
       return window.electronAPI.getNetwork();
     }
-    return {
-      ssid: 'Demo Network',
-      isConnected: true,
-      isEnabled: true,
-      signalStrength: 82,
-      icon: 'wifi',
-    };
+    return { supported: false, ssid: null, isConnected: false, isEnabled: false, signalStrength: null, icon: 'wifi_off' };
   }, []);
 
   return usePolling(fetchNetwork, 10000);
@@ -115,16 +109,7 @@ export function useMedia() {
     if (window.electronAPI?.getMedia) {
       return window.electronAPI.getMedia();
     }
-    return {
-      isPlaying: true,
-      isPaused: false,
-      hasMedia: true,
-      title: 'Blinding Lights',
-      artist: 'The Weeknd',
-      album: 'After Hours',
-      duration: 202,
-      position: 67,
-    };
+    return { supported: false, isPlaying: false, isPaused: false, hasMedia: false };
   }, []);
 
   const { data, loading, error, refresh } = usePolling(fetchMedia, 2000);
@@ -147,7 +132,7 @@ export function useBrightness() {
     if (window.electronAPI?.getBrightness) {
       return window.electronAPI.getBrightness();
     }
-    return { brightness: 80, isDarkMode: true };
+    return { supported: false, brightness: null };
   }, []);
 
   const { data, loading, error, refresh } = usePolling(fetchBrightness, 10000);
@@ -176,39 +161,65 @@ export function useDateTime() {
   return dateTime;
 }
 
-/**
- * Hook for weather data from Open-Meteo (free, no API key needed).
- */
-export function useWeather(lat = 28.6139, lon = 77.2090) {
-  const fetchWeather = useCallback(async () => {
-    try {
-      const res = await fetch(
-        `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=auto&forecast_days=5`
-      );
-      const data = await res.json();
+let weatherCoordinatesPromise;
 
-      const weatherIcons = {
-        0: 'clear_day', 1: 'partly_cloudy_day', 2: 'partly_cloudy_day',
-        3: 'cloud', 45: 'foggy', 48: 'foggy',
-        51: 'rainy', 53: 'rainy', 55: 'rainy',
-        61: 'rainy', 63: 'rainy', 65: 'rainy',
-        71: 'weather_snowy', 73: 'weather_snowy', 75: 'weather_snowy',
-        80: 'rainy', 81: 'rainy', 82: 'rainy',
-        95: 'thunderstorm', 96: 'thunderstorm', 99: 'thunderstorm',
-      };
+function getWeatherCoordinates(lat, lon) {
+  if (Number.isFinite(lat) && Number.isFinite(lon)) return Promise.resolve({ lat, lon });
+  if (weatherCoordinatesPromise) return weatherCoordinatesPromise;
 
-      return {
-        temperature: Math.round(data.current.temperature_2m),
-        feelsLike: Math.round(data.current.apparent_temperature),
-        humidity: data.current.relative_humidity_2m,
-        windSpeed: Math.round(data.current.wind_speed_10m),
-        weatherCode: data.current.weather_code,
-        icon: weatherIcons[data.current.weather_code] || 'cloud',
-        daily: data.daily,
-      };
-    } catch {
-      return null;
+  weatherCoordinatesPromise = new Promise((resolve) => {
+    if (!navigator.geolocation) {
+      resolve({ lat: 37.7749, lon: -122.4194 });
+      return;
     }
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => resolve({ lat: coords.latitude, lon: coords.longitude }),
+      () => resolve({ lat: 37.7749, lon: -122.4194 }),
+      { enableHighAccuracy: false, timeout: 6000, maximumAge: 60 * 60 * 1000 },
+    );
+  });
+
+  return weatherCoordinatesPromise;
+}
+
+/**
+ * Hook for local weather data from Open-Meteo (free, no API key needed).
+ */
+export function useWeather(lat, lon) {
+  const fetchWeather = useCallback(async () => {
+    const coordinates = await getWeatherCoordinates(lat, lon);
+    const params = new URLSearchParams({
+      latitude: String(coordinates.lat),
+      longitude: String(coordinates.lon),
+      current: 'temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m',
+      daily: 'temperature_2m_max,temperature_2m_min,weather_code',
+      timezone: 'auto',
+      forecast_days: '5',
+    });
+    const res = await fetch(`https://api.open-meteo.com/v1/forecast?${params}`);
+    if (!res.ok) throw new Error(`Weather request failed (${res.status})`);
+    const data = await res.json();
+    if (!data?.current || !data?.daily) throw new Error('Weather service returned incomplete data');
+
+    const weatherIcons = {
+      0: 'clear_day', 1: 'partly_cloudy_day', 2: 'partly_cloudy_day',
+      3: 'cloud', 45: 'foggy', 48: 'foggy',
+      51: 'rainy', 53: 'rainy', 55: 'rainy',
+      61: 'rainy', 63: 'rainy', 65: 'rainy',
+      71: 'weather_snowy', 73: 'weather_snowy', 75: 'weather_snowy',
+      80: 'rainy', 81: 'rainy', 82: 'rainy',
+      95: 'thunderstorm', 96: 'thunderstorm', 99: 'thunderstorm',
+    };
+
+    return {
+      temperature: Math.round(data.current.temperature_2m),
+      feelsLike: Math.round(data.current.apparent_temperature),
+      humidity: data.current.relative_humidity_2m,
+      windSpeed: Math.round(data.current.wind_speed_10m),
+      weatherCode: data.current.weather_code,
+      icon: weatherIcons[data.current.weather_code] || 'cloud',
+      daily: data.daily,
+    };
   }, [lat, lon]);
 
   return usePolling(fetchWeather, 600000); // Update every 10 minutes

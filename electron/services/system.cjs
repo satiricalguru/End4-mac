@@ -1,15 +1,31 @@
-const { exec } = require('child_process');
 const os = require('os');
 const path = require('path');
 const fs = require('fs');
+const { runCommand } = require('./command.cjs');
 
-function runCommand(cmd) {
-  return new Promise((resolve) => {
-    exec(cmd, (err, stdout) => {
-      if (err) resolve('');
-      else resolve(stdout.trim());
-    });
-  });
+function parseMemoryPressure(output, total) {
+  const availablePercentage = Number.parseInt(
+    output.match(/memory free percentage:\s*(\d+)%/i)?.[1] ?? '',
+    10,
+  );
+
+  if (!Number.isFinite(availablePercentage)) return null;
+
+  const percentage = Math.max(0, Math.min(100, 100 - availablePercentage));
+  const used = total * (percentage / 100);
+  const free = total - used;
+
+  return {
+    total,
+    free,
+    used,
+    percentage,
+    availablePercentage,
+    totalGB: (total / 1073741824).toFixed(1),
+    usedGB: (used / 1073741824).toFixed(1),
+    freeGB: (free / 1073741824).toFixed(1),
+    metric: 'pressure',
+  };
 }
 
 const systemService = {
@@ -20,18 +36,20 @@ const systemService = {
       const arch = os.arch();
       const uptime = os.uptime();
 
-      const macVersion = await runCommand('sw_vers -productVersion');
-      const macName = await runCommand('sw_vers -productName');
-      const chipInfo = await runCommand('sysctl -n machdep.cpu.brand_string');
+      const [macVersion, macName, chipInfo] = await Promise.all([
+        runCommand('/usr/bin/sw_vers', ['-productVersion']),
+        runCommand('/usr/bin/sw_vers', ['-productName']),
+        runCommand('/usr/sbin/sysctl', ['-n', 'machdep.cpu.brand_string']),
+      ]);
 
       return {
         hostname,
         platform,
         arch,
         uptime,
-        macVersion,
-        macName,
-        chip: chipInfo,
+        macVersion: macVersion.stdout,
+        macName: macName.stdout,
+        chip: chipInfo.stdout,
         totalMemory: os.totalmem(),
         freeMemory: os.freemem(),
       };
@@ -47,11 +65,11 @@ const systemService = {
 
   async getCpuUsage() {
     try {
-      const result = await runCommand(
-        `ps -A -o %cpu | awk '{s+=$1} END {print s}'`
-      );
+      const result = await runCommand('/bin/ps', ['-A', '-o', '%cpu=']);
       const cpuCount = os.cpus().length;
-      const totalUsage = parseFloat(result) || 0;
+      const totalUsage = result.ok
+        ? result.stdout.split('\n').reduce((sum, value) => sum + (Number.parseFloat(value) || 0), 0)
+        : 0;
       // Normalize to per-CPU percentage
       const normalized = Math.min(100, totalUsage / cpuCount);
 
@@ -67,6 +85,11 @@ const systemService = {
 
   async getMemoryUsage() {
     const total = os.totalmem();
+    const pressure = await runCommand('/usr/bin/memory_pressure', ['-Q']);
+    const parsed = pressure.ok ? parseMemoryPressure(pressure.stdout, total) : null;
+
+    if (parsed) return parsed;
+
     const free = os.freemem();
     const used = total - free;
     const percentage = Math.round((used / total) * 100);
@@ -79,6 +102,7 @@ const systemService = {
       totalGB: (total / 1073741824).toFixed(1),
       usedGB: (used / 1073741824).toFixed(1),
       freeGB: (free / 1073741824).toFixed(1),
+      metric: 'physical',
     };
   },
 
@@ -99,10 +123,13 @@ const systemService = {
               let iconPath = null;
               const infoPlist = path.join(appPath, 'Contents', 'Info.plist');
               if (fs.existsSync(infoPlist)) {
-                const iconName = await runCommand(
-                  `defaults read "${infoPlist}" CFBundleIconFile 2>/dev/null`
-                );
-                if (iconName) {
+                const iconResult = await runCommand('/usr/bin/defaults', [
+                  'read',
+                  infoPlist,
+                  'CFBundleIconFile',
+                ]);
+                const iconName = iconResult.stdout;
+                if (iconResult.ok && iconName) {
                   const icnsName = iconName.endsWith('.icns') ? iconName : `${iconName}.icns`;
                   const icnsPath = path.join(appPath, 'Contents', 'Resources', icnsName);
                   if (fs.existsSync(icnsPath)) {
@@ -132,4 +159,4 @@ const systemService = {
   },
 };
 
-module.exports = { systemService };
+module.exports = { parseMemoryPressure, systemService };

@@ -1,5 +1,11 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
+function subscribe(channel, callback) {
+  const listener = (_event, ...args) => callback(...args);
+  ipcRenderer.on(channel, listener);
+  return () => ipcRenderer.removeListener(channel, listener);
+}
+
 contextBridge.exposeInMainWorld('electronAPI', {
   // ── System Info ──────────────────────────────
   getBattery: () => ipcRenderer.invoke('get-battery'),
@@ -31,6 +37,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getApplications: () => ipcRenderer.invoke('get-applications'),
   launchApp: (path) => ipcRenderer.invoke('launch-app', path),
   openPath: (path) => ipcRenderer.invoke('open-path', path),
+  openExternal: (url) => ipcRenderer.invoke('open-external', url),
 
   // ── Screen ───────────────────────────────────
   getScreenInfo: () => ipcRenderer.invoke('get-screen-info'),
@@ -42,12 +49,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
   setWindowMode: (mode) => ipcRenderer.send('set-window-mode', mode),
 
   // ── Event Listeners ──────────────────────────
-  onToggleOverlay: (cb) => ipcRenderer.on('toggle-overlay', cb),
-  onToggleSidebarLeft: (cb) => ipcRenderer.on('toggle-sidebar-left', cb),
-  onToggleSidebarRight: (cb) => ipcRenderer.on('toggle-sidebar-right', cb),
-  onToggleSettings: (cb) => ipcRenderer.on('toggle-settings', cb),
-  onOpenSettings: (cb) => ipcRenderer.on('open-settings', cb),
-  onDarkModeChanged: (cb) => ipcRenderer.on('dark-mode-changed', (_, val) => cb(val)),
+  onToggleOverlay: (cb) => subscribe('toggle-overlay', cb),
+  onToggleSidebarLeft: (cb) => subscribe('toggle-sidebar-left', cb),
+  onToggleSidebarRight: (cb) => subscribe('toggle-sidebar-right', cb),
+  onToggleSettings: (cb) => subscribe('toggle-settings', cb),
+  onOpenSettings: (cb) => subscribe('open-settings', cb),
+  onDarkModeChanged: (cb) => subscribe('dark-mode-changed', cb),
 
   // ── Cleanup ──────────────────────────────────
   removeAllListeners: (channel) => ipcRenderer.removeAllListeners(channel),

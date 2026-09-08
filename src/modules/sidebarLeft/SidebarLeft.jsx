@@ -143,7 +143,7 @@ export default function SidebarLeft({ isOpen, onClose }) {
 
   // Instant local slider states for 120fps zero-latency dragging
   const [localVolume, setLocalVolume] = useState(50);
-  const [localBrightness, setLocalBrightness] = useState(80);
+  const [localBrightness, setLocalBrightness] = useState(0);
   const volumeDebounceRef = useRef(null);
   const brightnessDebounceRef = useRef(null);
 
@@ -153,7 +153,7 @@ export default function SidebarLeft({ isOpen, onClose }) {
   }, [audio?.volume]);
 
   useEffect(() => {
-    if (brightness?.brightness !== undefined) setLocalBrightness(brightness.brightness);
+    if (Number.isFinite(brightness?.brightness)) setLocalBrightness(brightness.brightness);
   }, [brightness?.brightness]);
 
   // Handle immediate volume drag
@@ -167,6 +167,7 @@ export default function SidebarLeft({ isOpen, onClose }) {
 
   // Handle immediate brightness drag
   const handleBrightnessChange = (val) => {
+    if (!brightness?.supported) return;
     setLocalBrightness(val);
     if (brightnessDebounceRef.current) clearTimeout(brightnessDebounceRef.current);
     brightnessDebounceRef.current = setTimeout(() => {
@@ -175,38 +176,53 @@ export default function SidebarLeft({ isOpen, onClose }) {
   };
 
   const [toggles, setToggles] = useState({
-    wifi: true,
-    bluetooth: true,
+    wifi: false,
+    bluetooth: false,
     dnd: false,
-    nightShift: true,
-    airdrop: true,
+    darkMode: false,
+    airdrop: false,
     hotspot: false,
   });
+  const [toggleCapabilities, setToggleCapabilities] = useState({});
+  const [toggleErrors, setToggleErrors] = useState({});
 
   // Load real system toggle states
   useEffect(() => {
     if (window.electronAPI?.getToggleStates) {
       window.electronAPI.getToggleStates().then((st) => {
-        if (st) setToggles((prev) => ({ ...prev, ...st }));
+        if (!st) return;
+        const { capabilities = {}, errors = {}, ...states } = st;
+        setToggles((prev) => ({ ...prev, ...states }));
+        setToggleCapabilities(capabilities);
+        setToggleErrors(errors);
       });
     }
   }, [isOpen]);
 
   const handleToggle = async (key) => {
+    if (!toggleCapabilities[key]) return;
     const nextVal = !toggles[key];
     // Immediate optimistic update for instant feedback
     setToggles((prev) => ({ ...prev, [key]: nextVal }));
 
+    let result = null;
     if (window.electronAPI) {
       if (key === 'wifi' && window.electronAPI.toggleWifi) {
-        await window.electronAPI.toggleWifi(nextVal);
+        result = await window.electronAPI.toggleWifi(nextVal);
       } else if (key === 'bluetooth' && window.electronAPI.toggleBluetooth) {
-        await window.electronAPI.toggleBluetooth(nextVal);
-      } else if (key === 'nightShift' && window.electronAPI.toggleDarkMode) {
-        await window.electronAPI.toggleDarkMode();
+        result = await window.electronAPI.toggleBluetooth(nextVal);
+      } else if (key === 'darkMode' && window.electronAPI.toggleDarkMode) {
+        result = await window.electronAPI.toggleDarkMode();
       } else if (key === 'dnd' && window.electronAPI.toggleDnd) {
-        await window.electronAPI.toggleDnd();
+        result = await window.electronAPI.toggleDnd();
       }
+    }
+
+    if (!result?.ok) {
+      setToggles((prev) => ({ ...prev, [key]: !nextVal }));
+      if (result?.error) setToggleErrors((prev) => ({ ...prev, [key]: result.error }));
+    } else {
+      setToggles((prev) => ({ ...prev, [key]: result.value }));
     }
   };
 
@@ -214,7 +230,7 @@ export default function SidebarLeft({ isOpen, onClose }) {
     { key: 'wifi', icon: 'wifi', label: 'Wi-Fi' },
     { key: 'bluetooth', icon: 'bluetooth', label: 'Bluetooth' },
     { key: 'dnd', icon: 'do_not_disturb_on', label: 'DND' },
-    { key: 'nightShift', icon: 'nightlight', label: 'Night Shift' },
+    { key: 'darkMode', icon: 'dark_mode', label: 'Dark Mode' },
     { key: 'airdrop', icon: 'share', label: 'AirDrop' },
     { key: 'hotspot', icon: 'wifi_tethering', label: 'Hotspot' },
   ];
@@ -246,11 +262,14 @@ export default function SidebarLeft({ isOpen, onClose }) {
             <div className="quick-toggles">
               {toggleData.map(({ key, icon, label }) => {
                 const isActive = toggles[key];
+                const isSupported = toggleCapabilities[key] === true;
                 return (
                   <motion.div
                     key={key}
-                    className={`quick-toggle ${isActive ? 'quick-toggle--active' : ''}`}
+                    className={`quick-toggle ${isActive ? 'quick-toggle--active' : ''} ${!isSupported ? 'quick-toggle--unsupported' : ''}`}
                     onClick={() => handleToggle(key)}
+                    aria-disabled={!isSupported}
+                    title={!isSupported ? toggleErrors[key] || `${label} is not supported on this Mac` : label}
                     whileTap={{ scale: 0.92 }}
                     transition={{ type: 'spring', stiffness: 500, damping: 25 }}
                   >
@@ -262,7 +281,7 @@ export default function SidebarLeft({ isOpen, onClose }) {
             </div>
 
             {/* Brightness Slider with Real-time Gradient Fill */}
-            <div className="slider-widget">
+            <div className={`slider-widget ${!brightness?.supported ? 'slider-widget--unsupported' : ''}`} title={brightness?.error || 'Display brightness'}>
               <span
                 className="icon"
                 style={{ cursor: 'pointer' }}
@@ -276,12 +295,13 @@ export default function SidebarLeft({ isOpen, onClose }) {
                 min="0"
                 max="100"
                 value={localBrightness}
+                disabled={!brightness?.supported}
                 onChange={(e) => handleBrightnessChange(parseInt(e.target.value))}
                 style={{
                   background: `linear-gradient(to right, var(--md-primary) 0%, var(--md-primary) ${localBrightness}%, var(--md-surface-container-highest) ${localBrightness}%, var(--md-surface-container-highest) 100%)`,
                 }}
               />
-              <span className="slider-widget__value">{localBrightness}%</span>
+              <span className="slider-widget__value">{brightness?.supported ? `${localBrightness}%` : 'N/A'}</span>
             </div>
 
             {/* Volume Slider with Real-time Gradient Fill & Mute Toggle */}
@@ -322,10 +342,10 @@ export default function SidebarLeft({ isOpen, onClose }) {
                 <span className="icon" style={{ color: 'var(--md-primary)' }}>{network.icon}</span>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                   <span style={{ font: 'var(--md-label-large)', color: 'var(--md-on-surface)' }}>
-                    {network.ssid}
+                    {network.ssid || 'Connected Wi-Fi'}
                   </span>
                   <span style={{ font: 'var(--md-body-small)', color: 'var(--md-on-surface-variant)' }}>
-                    Signal: {network.signalStrength}% {network.ip ? `· ${network.ip}` : ''}
+                    {Number.isFinite(network.signalStrength) ? `Signal: ${network.signalStrength}% ` : ''}{network.ip || ''}
                   </span>
                 </div>
               </div>

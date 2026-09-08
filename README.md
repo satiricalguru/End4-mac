@@ -6,7 +6,7 @@
 
 ### *A macOS-native recreation inspired by end4-pC / illogical-impulse, redesigned for macOS using modern desktop architecture.*
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-teal.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
+[![License: GPL-3.0](https://img.shields.io/badge/License-GPL--3.0-blue.svg?style=for-the-badge)](https://www.gnu.org/licenses/gpl-3.0)
 [![Platform: macOS](https://img.shields.io/badge/Platform-macOS-black.svg?style=for-the-badge&logo=apple)](https://apple.com)
 [![Framework: Electron](https://img.shields.io/badge/Electron-43.4+-47848F.svg?style=for-the-badge&logo=electron)](https://electronjs.org)
 [![UI: React 19](https://img.shields.io/badge/React-19.2+-61DAFB.svg?style=for-the-badge&logo=react)](https://reactjs.org)
@@ -16,25 +16,28 @@
 <br />
 
 <p align="center">
-  <b>End4-mac</b> brings the iconic <a href="https://github.com/pctrade/end4-pC">end4-pC / illogical-impulse</a> desktop rice experience to macOS — featuring a full <b>Live Wallpaper Engine</b>, <b>Material 3 Expressive Widgets</b>, <b>Interactive Shaders</b>, <b>Spotlight App Launcher</b>, <b>Synchronized LRCLIB Lyrics</b>, and <b>Dynamic Material You Theming</b>.
+  <b>End4-mac</b> brings the visual language of <a href="https://github.com/pctrade/end4-pC">end4-pC / illogical-impulse</a> to macOS as an Electron desktop companion, with expressive widgets, local shader scenes, an app launcher, media controls, and dynamic theming.
 </p>
 
 </div>
 
 ---
 
+> [!IMPORTANT]
+> The upstream project is a Linux Quickshell configuration for Hyprland/Niri, not a Windows application. macOS does not expose equivalent compositor, workspace, or Control Center APIs, so this port recreates the experience without replacing Finder, Spaces, or the macOS window manager.
+
 ## 🌟 Key Highlights
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                             FLOATING STATUS BAR                             │
-│   [Workspaces]              [12:45 PM | 33°C]         [Media | 85% | Wi-Fi] │
+│   [Quick settings]          [12:45 PM | 33°C]         [Media | 85% | Wi-Fi] │
 └─────────────────────────────────────────────────────────────────────────────┘
 ┌───────────────────────┐  ┌─────────────────────┐  ┌─────────────────────────┐
 │   LEFT QUICK-PANEL    │  │    COOKIE CLOCK     │  │    RIGHT MEDIA & AI     │
 │  • Wi-Fi / Bluetooth  │  │                     │  │  • Now Playing Card     │
-│  • DND / Night Shift  │  │   (M3 7-Scallop)    │  │  • Synchronized Lyrics  │
-│  • 120fps Sliders     │  │   Analog + Date     │  │  • AI Assistant (Chat)  │
+│  • Dark Mode          │  │   (M3 7-Scallop)    │  │  • Synchronized Lyrics  │
+│  • Native sliders     │  │   Analog + Date     │  │  • AI Assistant (Chat)  │
 │  • 5-Day Weather      │  │                     │  │  • CPU / RAM Live Gauge │
 └───────────────────────┘  └─────────────────────┘  └─────────────────────────┘
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -57,36 +60,36 @@
   * Integrated online search directly querying Wallhaven's repository with categories (*General*, *Anime*, *People*).
 * **Material 3 Centered Shape Cutouts:**
   * Procedural bezier-curve scallop shapes (Cookie 7, 9, 12, 16-sided, Flower, 4-Leaf Clover) with customizable opacity, tint, and optional continuous rotation.
-* **Filters & Video:**
-  * Real-time blur (0–40px) and dimming (0–80%) sliders.
-  * HTML5 looping video wallpaper support.
+* **Filters:**
+  * Real-time blur (0–18px) and dimming (0–60%) sliders.
 
 ### 2. ⏰ On-Desktop Material 3 Widgets
 * **Cookie Analog Clock:** Signature Android 12/14/M3 expressive scallop analog clock with continuous rotating hour/minute/second hands and date indicator pill.
 * **Bold Typography Digital Clock:** Large Material display typography with date and live weather conditions.
-* **Audio Reactive Visualizer:** Real-time frequency bar animation reacting to current media playback state.
+* **Ambient Visualizer:** A lightweight animated pulse shown alongside current media state.
 * **Desktop Weather Card:** Live temperature, apparent temperature, humidity, and wind speed from Open-Meteo.
 * **System Resource Radial Meters:** Live animated SVG circular meters for CPU and RAM consumption.
 
-### 3. 🎛️ Wallpaper & Engine Customizer (`⌘ + ,`)
+### 3. 🎛️ Wallpaper & Engine Customizer (`⌘⇧,`)
 * One-click modal to switch between Presets, Online Wallhaven Wallpapers, Live Shaders, M3 Shape cutouts, and Desktop Widgets.
+* Still images are downloaded safely and applied to the native macOS desktop; shader scenes run inside the shell window.
 * **Dynamic Material You Auto-Theming:** Extracts dominant color palettes from any chosen wallpaper in real-time and applies tonal variations across the entire UI.
 
-### 4. 🚀 Complete macOS Desktop Shell
-* **Floating Pill Status Bar:** Top center glassmorphic pill with virtual desktop indicators, live clock, weather snippet, volume, Wi-Fi, battery, and media marquee.
-* **Left Quick-Settings Sidebar (`⌘ + A`):**
-  * Real macOS system toggles for **Wi-Fi**, **Bluetooth**, **Do Not Disturb**, and **Night Shift**.
-  * **Zero-latency 120fps sliders** for Display Brightness and System Volume with dynamic gradient track fills.
-  * Interactive month calendar with today highlights.
-* **Right Sidebar (`⌘ + N`):**
+### 4. 🚀 macOS Desktop Companion
+* **Floating Pill Status Bar:** Top center glassmorphic pill with a live clock, local weather, volume, Wi-Fi, battery, and media marquee.
+* **Click-through Desktop Layer:** Normal clicks pass through to Finder and other applications; shell controls become interactive on hover and panels become focusable when opened.
+* **Left Quick-Settings Sidebar (`⌘⇧A`):**
+  * Native **Wi-Fi** and **Dark Mode** controls. Bluetooth and brightness controls are enabled only when their optional command-line helpers are installed; unavailable controls are clearly disabled.
+  * System volume control, an interactive calendar, and a local forecast.
+* **Right Sidebar (`⌘⇧N`):**
   * **Now Playing Card:** Album art, title, artist, progress scrubber, and playback controls (Spotify & Apple Music).
   * **Synchronized LRCLIB Lyrics:** Real-time time-synced scrolling lyrics matching audio playback.
   * **Notes & Tasks Widget:** Persistent quick notes saved via localStorage.
-  * **AI Assistant Tab:** Chat interface compatible with local Ollama (`llama3`) and Google Gemini.
-* **Spotlight App Launcher (`⌘ + Space`):**
-  * Real-time fuzzy search across `/Applications` and `/System/Applications`.
+  * **AI Assistant Tab:** Chat interface for a local Ollama (`llama3`) model.
+* **App Launcher (`⌘⇧Space`):**
+  * Real-time search across `/Applications` and `/System/Applications`.
   * Inline calculator with instant math evaluation (`= 42 * 8`).
-  * Quick system actions: Theme toggle, screenshot, lock screen, and web search fallback.
+  * Quick actions for theme, screenshots, Downloads, Activity Monitor, and web search fallback.
 
 ---
 
@@ -94,10 +97,10 @@
 
 | Shortcut | Action |
 |---|---|
-| <kbd>⌘</kbd> + <kbd>Space</kbd> | Open Spotlight App Launcher & Calculator |
-| <kbd>⌘</kbd> + <kbd>,</kbd> *(or Click Clock)* | Open Wallpaper Engine Customizer & Widget Settings |
-| <kbd>⌘</kbd> + <kbd>A</kbd> | Open Left Quick-Settings Sidebar |
-| <kbd>⌘</kbd> + <kbd>N</kbd> | Open Right Media & AI Assistant Sidebar |
+| <kbd>⌘</kbd> + <kbd>⇧</kbd> + <kbd>Space</kbd> | Open App Launcher & Calculator |
+| <kbd>⌘</kbd> + <kbd>⇧</kbd> + <kbd>,</kbd> *(or Click Clock)* | Open Wallpaper & Widget Settings |
+| <kbd>⌘</kbd> + <kbd>⇧</kbd> + <kbd>A</kbd> | Open Left Quick-Settings Sidebar |
+| <kbd>⌘</kbd> + <kbd>⇧</kbd> + <kbd>N</kbd> | Open Right Media & AI Assistant Sidebar |
 | <kbd>Esc</kbd> | Dismiss any open modal, sidebar, or launcher |
 
 ---
@@ -114,9 +117,11 @@ End4-mac/
 │       ├── battery.cjs               # Battery percentage & charging via pmset
 │       ├── brightness.cjs            # Display backlight control
 │       ├── media.cjs                 # Apple Music & Spotify playback bridge
-│       ├── network.cjs               # Wi-Fi SSID, RSSI, and IP via airport/networksetup
+│       ├── command.cjs               # Safe argument-based process execution
+│       ├── network.cjs               # Wi-Fi state and IP via public macOS tools
 │       ├── system.cjs                # CPU, RAM, and Application directory scanning
-│       └── toggles.cjs               # Native Wi-Fi, Bluetooth, DND, and Night Shift hooks
+│       ├── toggles.cjs               # Capability-aware native quick toggles
+│       └── wallpaper.cjs             # Safe native wallpaper application and download cache
 ├── src/                              # Renderer Process (React 19 + Vite)
 │   ├── App.jsx                       # Main shell coordinator
 │   ├── main.jsx                      # React entry point
@@ -153,6 +158,7 @@ End4-mac/
 - macOS 12.0 (Monterey) or later (Apple Silicon & Intel supported)
 - [Node.js](https://nodejs.org) (v18 or newer)
 - npm / yarn / pnpm
+- Optional: `brew install brightness blueutil` for display brightness and Bluetooth controls
 
 ### Installation
 
@@ -181,6 +187,8 @@ End4-mac/
 5. **Build for production:**
    ```bash
    npm run build
+   npm run pack:mac   # unsigned local .app
+   npm run dist:mac   # DMGs; signing identity required for distribution
    ```
 
 ---
@@ -188,7 +196,7 @@ End4-mac/
 ## 🎨 Theming & Customization
 
 End4-mac implements the **Material 3 Expressive Design System**:
-- **Dynamic Palette Extraction:** Change your wallpaper in the customizer (`⌘ + ,`), and the application will extract the dominant tones to generate primary, secondary, tertiary, and container colors dynamically.
+- **Dynamic Palette Extraction:** Change your wallpaper in the customizer (`⌘⇧,`), and the application will extract the dominant tones to generate primary, secondary, tertiary, and container colors dynamically.
 - **Glassmorphism:** Uses `-webkit-backdrop-filter: blur(40px)` with tailored opacity layers (`--glass-bg`, `--glass-border`).
 - **Offline Font Support:** Includes `MaterialSymbolsRounded.ttf` bundled locally for fast, reliable icon rendering without internet connectivity.
 
@@ -280,4 +288,4 @@ This macOS port builds upon the foundation and creative work of the developers a
 
 ## 📄 License
 
-This project is open-source software licensed under the **[MIT License](LICENSE)**.
+This project is open-source software licensed under the **[GNU General Public License v3.0 (GPL-3.0)](LICENSE)**.

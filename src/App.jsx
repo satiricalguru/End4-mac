@@ -45,6 +45,7 @@ function ShellContent() {
   const [sidebarRightOpen, setSidebarRightOpen] = useState(false);
   const [overlayOpen, setOverlayOpen] = useState(false);
   const [wallpaperModalOpen, setWallpaperModalOpen] = useState(false);
+  const hasOpenPanel = sidebarLeftOpen || sidebarRightOpen || overlayOpen || wallpaperModalOpen;
 
   const { isDark, toggleTheme, setAccentFromWallpaper } = useTheme();
 
@@ -64,56 +65,79 @@ function ShellContent() {
     setAccentFromWallpaper(resolveAssetUrl(wallpaperConfig.wallpaperUrl));
   }, [setAccentFromWallpaper, wallpaperConfig.wallpaperUrl]);
 
-  // Ensure window is always interactive for widgets, bar, and modals
+  // Keep the desktop transparent to clicks except over shell controls.
   useEffect(() => {
-    window.electronAPI?.setIgnoreMouse(false);
-  }, []);
+    const api = window.electronAPI;
+    if (!api) return undefined;
+
+    if (hasOpenPanel) {
+      api.setWindowMode('interactive');
+      api.setIgnoreMouse(false);
+      return undefined;
+    }
+
+    api.setWindowMode('desktop');
+    api.setIgnoreMouse(true);
+    const handleMouseMove = (event) => {
+      const target = event.target instanceof Element ? event.target : null;
+      const isOverControl = Boolean(target?.closest('.bar, .bar__sidebar-trigger, [data-shell-interactive="true"]'));
+      api.setIgnoreMouse(!isOverControl);
+    };
+    document.addEventListener('mousemove', handleMouseMove);
+    return () => document.removeEventListener('mousemove', handleMouseMove);
+  }, [hasOpenPanel]);
 
   // Listen for global shortcut events from Electron
   useEffect(() => {
     if (!window.electronAPI) return;
 
-    window.electronAPI.onToggleOverlay(() => {
+    const unsubscribers = [window.electronAPI.onToggleOverlay(() => {
       setOverlayOpen((prev) => !prev);
       setSidebarLeftOpen(false);
       setSidebarRightOpen(false);
       setWallpaperModalOpen(false);
-    });
+    })];
 
-    window.electronAPI.onToggleSidebarLeft(() => {
+    unsubscribers.push(window.electronAPI.onToggleSidebarLeft(() => {
       setSidebarLeftOpen((prev) => !prev);
+      setSidebarRightOpen(false);
       setOverlayOpen(false);
       setWallpaperModalOpen(false);
-    });
+    }));
 
-    window.electronAPI.onToggleSidebarRight(() => {
+    unsubscribers.push(window.electronAPI.onToggleSidebarRight(() => {
       setSidebarRightOpen((prev) => !prev);
+      setSidebarLeftOpen(false);
       setOverlayOpen(false);
       setWallpaperModalOpen(false);
-    });
+    }));
 
-    window.electronAPI.onToggleSettings(() => {
+    unsubscribers.push(window.electronAPI.onToggleSettings(() => {
       setWallpaperModalOpen((prev) => !prev);
-    });
+      setSidebarLeftOpen(false);
+      setSidebarRightOpen(false);
+      setOverlayOpen(false);
+    }));
 
-    return () => {
-      window.electronAPI.removeAllListeners('toggle-overlay');
-      window.electronAPI.removeAllListeners('toggle-sidebar-left');
-      window.electronAPI.removeAllListeners('toggle-sidebar-right');
-      window.electronAPI.removeAllListeners('toggle-settings');
-    };
+    return () => unsubscribers.forEach((unsubscribe) => unsubscribe?.());
   }, []);
 
   // Keyboard shortcut fallback
   useEffect(() => {
     const handleKey = (e) => {
-      if ((e.ctrlKey || e.metaKey) && e.code === 'Space') {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.code === 'Space') {
         e.preventDefault();
         setOverlayOpen((prev) => !prev);
       }
-      if (e.metaKey && e.key === ',') {
+      if (e.metaKey && e.shiftKey && e.code === 'Comma') {
         e.preventDefault();
         setWallpaperModalOpen((prev) => !prev);
+      }
+      if (e.key === 'Escape') {
+        setSidebarLeftOpen(false);
+        setSidebarRightOpen(false);
+        setOverlayOpen(false);
+        setWallpaperModalOpen(false);
       }
     };
     window.addEventListener('keydown', handleKey);

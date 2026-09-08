@@ -1,57 +1,60 @@
-const { exec } = require('child_process');
+const { commandExists, runCommand } = require('./command.cjs');
 
-function runCommand(cmd) {
-  return new Promise((resolve) => {
-    exec(cmd, (err, stdout) => {
-      if (err) resolve('');
-      else resolve(stdout.trim());
-    });
-  });
+function parseBrightnessOutput(output) {
+  const matches = [...output.matchAll(/brightness\s+([01](?:\.\d+)?)/gi)];
+  if (!matches.length) return null;
+
+  const value = Number.parseFloat(matches.at(-1)[1]);
+  if (!Number.isFinite(value)) return null;
+  return Math.round(Math.max(0, Math.min(1, value)) * 100);
+}
+
+function unsupportedBrightness() {
+  return {
+    brightness: null,
+    supported: false,
+    error: 'Display brightness control requires the optional `brightness` helper.',
+  };
 }
 
 const brightnessService = {
   async getBrightness() {
-    try {
-      // Try using brightness command if available
-      const result = await runCommand(`osascript -e 'tell application "System Events" to tell appearance preferences to get dark mode'`);
-      const isDark = result === 'true';
+    if (!(await commandExists('brightness'))) return unsupportedBrightness();
 
-      // AppleScript method for brightness (requires accessibility permissions)
-      const brightnessResult = await runCommand(
-        `osascript -e 'tell application "System Preferences" to quit' 2>/dev/null; ioreg -c AppleBacklightDisplay | grep -i brightness | tail -1 | sed 's/.*= //'`
-      );
+    const result = await runCommand('brightness', ['-l']);
+    const brightness = result.ok ? parseBrightnessOutput(result.stdout) : null;
 
-      let brightness = parseInt(brightnessResult);
-      if (isNaN(brightness)) {
-        // Fallback: try with corebrightnessdiag or default to 80
-        brightness = 80;
-      }
-
-      // Normalize to 0-100 range
-      if (brightness > 100) brightness = Math.round((brightness / 1024) * 100);
-
+    if (brightness === null) {
       return {
-        brightness: Math.max(0, Math.min(100, brightness)),
-        isDarkMode: isDark,
+        ...unsupportedBrightness(),
+        supported: true,
+        error: result.error || 'The display did not report a brightness value.',
       };
-    } catch {
-      return { brightness: 80, isDarkMode: true };
     }
+
+    return { brightness, supported: true, error: null };
   },
 
-  async setBrightness(val) {
-    const clamped = Math.max(0, Math.min(100, Math.round(val)));
-    // This requires the 'brightness' CLI tool (brew install brightness)
-    try {
-      await runCommand(`brightness ${clamped / 100}`);
-    } catch {
-      // Fallback: try AppleScript
-      await runCommand(
-        `osascript -e 'tell application "System Preferences" to quit'`
-      );
+  async setBrightness(value) {
+    if (!(await commandExists('brightness'))) return unsupportedBrightness();
+
+    const numericValue = Number(value);
+    if (!Number.isFinite(numericValue)) {
+      return { ...unsupportedBrightness(), error: 'Brightness must be a number.' };
     }
+
+    const clamped = Math.max(0, Math.min(100, Math.round(numericValue)));
+    const result = await runCommand('brightness', [String(clamped / 100)]);
+    if (!result.ok) {
+      return {
+        brightness: null,
+        supported: true,
+        error: result.error || 'Unable to change display brightness.',
+      };
+    }
+
     return this.getBrightness();
   },
 };
 
-module.exports = { brightnessService };
+module.exports = { brightnessService, parseBrightnessOutput };

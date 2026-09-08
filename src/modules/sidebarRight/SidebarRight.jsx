@@ -164,8 +164,8 @@ function NotesWidget() {
       const saved = localStorage.getItem('end4pc-notes');
       return saved ? JSON.parse(saved) : [
         { id: 1, text: 'Welcome to end4-pC Mac! ✨', done: false },
-        { id: 2, text: 'Press ⌘ + Space for Launcher', done: false },
-        { id: 3, text: 'Press ⌘ + , for Wallpaper Engine', done: false },
+        { id: 2, text: 'Press ⌘⇧Space for Launcher', done: false },
+        { id: 3, text: 'Press ⌘⇧, for Wallpaper Studio', done: false },
       ];
     } catch {
       return [];
@@ -242,7 +242,7 @@ function NotesWidget() {
 
 function AiChatWidget() {
   const [messages, setMessages] = useState([
-    { role: 'assistant', text: 'Hello! I am your Material 3 assistant. How can I help you today?' },
+    { role: 'assistant', text: 'AI chat uses a local Ollama llama3 model. Start Ollama, then ask a question here.' },
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);

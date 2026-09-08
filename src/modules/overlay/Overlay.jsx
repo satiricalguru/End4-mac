@@ -17,7 +17,6 @@ const QUICK_ACTIONS = [
   { id: 'screenshot', name: 'Screenshot', icon: 'screenshot_monitor', desc: 'Open the macOS capture utility', action: 'screenshot', accent: 'tertiary' },
   { id: 'downloads', name: 'Open Downloads', icon: 'download', desc: 'Jump to your Downloads folder', action: 'downloads', accent: 'primary' },
   { id: 'activity', name: 'System Monitor', icon: 'monitor_heart', desc: 'Inspect CPU, memory, and processes', action: 'activity', accent: 'secondary' },
-  { id: 'emoji', name: 'Emoji & Symbols', icon: 'emoji_emotions', desc: 'Open the macOS character viewer', action: 'emoji', accent: 'tertiary' },
 ];
 
 const FILTERS = [
@@ -28,10 +27,101 @@ const FILTERS = [
 
 function safeCalc(expr) {
   try {
-    if (!/^[\d\s+\-*/().%^]+$/.test(expr)) return null;
-    const result = new Function(`'use strict'; return (${expr.replace(/\^/g, '**')})`)();
-    return typeof result === 'number' && Number.isFinite(result)
-      ? Math.round(result * 1000000) / 1000000
+    if (!expr || typeof expr !== 'string') return null;
+    const clean = expr.replace(/\s+/g, '');
+    if (!clean || !/^[\d+\-*/().%^]+$/.test(clean)) return null;
+
+    const tokens = [];
+    let i = 0;
+    while (i < clean.length) {
+      const ch = clean[i];
+      if (/\d/.test(ch) || (ch === '.' && /\d/.test(clean[i + 1]))) {
+        let numStr = '';
+        while (i < clean.length && /[\d.]/.test(clean[i])) {
+          numStr += clean[i];
+          i++;
+        }
+        tokens.push(Number(numStr));
+      } else if ('+-*/%^()'.includes(ch)) {
+        if ((ch === '-' || ch === '+') && (tokens.length === 0 || ['+', '-', '*', '/', '%', '^', '('].includes(tokens[tokens.length - 1]))) {
+          let numStr = ch;
+          i++;
+          while (i < clean.length && /[\d.]/.test(clean[i])) {
+            numStr += clean[i];
+            i++;
+          }
+          if (numStr === '-' || numStr === '+') return null;
+          tokens.push(Number(numStr));
+        } else {
+          tokens.push(ch);
+          i++;
+        }
+      } else {
+        return null;
+      }
+    }
+
+    const output = [];
+    const ops = [];
+    const precedence = { '+': 1, '-': 1, '*': 2, '/': 2, '%': 2, '^': 3 };
+    const rightAssoc = { '^': true };
+
+    for (const token of tokens) {
+      if (typeof token === 'number') {
+        output.push(token);
+      } else if (token === '(') {
+        ops.push(token);
+      } else if (token === ')') {
+        while (ops.length && ops[ops.length - 1] !== '(') {
+          output.push(ops.pop());
+        }
+        if (ops[ops.length - 1] === '(') ops.pop();
+        else return null;
+      } else {
+        while (
+          ops.length &&
+          ops[ops.length - 1] !== '(' &&
+          (precedence[ops[ops.length - 1]] > precedence[token] ||
+            (precedence[ops[ops.length - 1]] === precedence[token] && !rightAssoc[token]))
+        ) {
+          output.push(ops.pop());
+        }
+        ops.push(token);
+      }
+    }
+    while (ops.length) {
+      const op = ops.pop();
+      if (op === '(' || op === ')') return null;
+      output.push(op);
+    }
+
+    const stack = [];
+    for (const token of output) {
+      if (typeof token === 'number') {
+        stack.push(token);
+      } else {
+        if (stack.length < 2) return null;
+        const b = stack.pop();
+        const a = stack.pop();
+        let res;
+        switch (token) {
+          case '+': res = a + b; break;
+          case '-': res = a - b; break;
+          case '*': res = a * b; break;
+          case '/': res = b === 0 ? null : a / b; break;
+          case '%': res = a % b; break;
+          case '^': res = Math.pow(a, b); break;
+          default: return null;
+        }
+        if (res === null || !Number.isFinite(res)) return null;
+        stack.push(res);
+      }
+    }
+
+    if (stack.length !== 1) return null;
+    const finalVal = stack[0];
+    return typeof finalVal === 'number' && Number.isFinite(finalVal)
+      ? Math.round(finalVal * 1000000) / 1000000
       : null;
   } catch {
     return null;
@@ -79,7 +169,8 @@ export default function Overlay({ isOpen, onClose, onOpenSettings, onToggleTheme
   const mode = parsedQuery.startsWith('>') ? 'actions'
     : parsedQuery.startsWith('=') ? 'calculator'
       : parsedQuery.startsWith('@') ? 'files' : filter;
-  const searchTerm = parsedQuery.replace(/^[>=@]/, '').trim().toLowerCase();
+  const rawSearchTerm = parsedQuery.replace(/^[>=@]/, '').trim();
+  const searchTerm = rawSearchTerm.toLowerCase();
   const calcResult = mode === 'calculator' ? safeCalc(searchTerm) : (!parsedQuery.includes(' ') ? safeCalc(parsedQuery) : null);
 
   const visibleActions = useMemo(() => {
@@ -101,10 +192,10 @@ export default function Overlay({ isOpen, onClose, onOpenSettings, onToggleTheme
     if (calcResult !== null && calcResult !== undefined) items.push({ type: 'calc', value: calcResult });
     visibleActions.forEach((action) => items.push({ type: 'action', ...action }));
     visibleApps.forEach((app) => items.push({ type: 'app', ...app }));
-    if (mode === 'files' && searchTerm) items.push({ type: 'file', name: `Open “${searchTerm}”`, path: searchTerm, icon: 'folder_open' });
+    if (mode === 'files' && rawSearchTerm) items.push({ type: 'file', name: `Open “${rawSearchTerm}”`, path: rawSearchTerm, icon: 'folder_open' });
     if (searchTerm && !items.length) items.push({ type: 'web-search', name: `Search the web for “${searchTerm}”`, icon: 'travel_explore', desc: 'Open in your default browser' });
     return items;
-  }, [calcResult, mode, searchTerm, visibleActions, visibleApps]);
+  }, [calcResult, mode, rawSearchTerm, searchTerm, visibleActions, visibleApps]);
 
   const rememberApp = useCallback((app) => {
     const next = [app, ...recentApps.filter((recent) => recent.path !== app.path)].slice(0, 5);
@@ -118,11 +209,11 @@ export default function Overlay({ isOpen, onClose, onOpenSettings, onToggleTheme
       rememberApp(item);
       window.electronAPI?.launchApp(item.path);
     } else if (item.type === 'file') {
-      window.electronAPI?.openPath(item.path.replace(/^~/, ''));
+      window.electronAPI?.openPath(item.path);
     } else if (item.type === 'calc') {
       navigator.clipboard?.writeText(String(item.value));
     } else if (item.type === 'web-search') {
-      window.open(`https://www.google.com/search?q=${encodeURIComponent(searchTerm)}`);
+      window.electronAPI?.openExternal(`https://www.google.com/search?q=${encodeURIComponent(searchTerm)}`);
     } else if (item.type === 'action') {
       const appPaths = {
         screenshot: '/System/Applications/Utilities/Screenshot.app',
@@ -132,7 +223,6 @@ export default function Overlay({ isOpen, onClose, onOpenSettings, onToggleTheme
       if (item.action === 'theme') onToggleTheme?.();
       if (item.action === 'screenshot' || item.action === 'activity') window.electronAPI?.launchApp(appPaths[item.action]);
       if (item.action === 'downloads') window.electronAPI?.openPath('~/Downloads');
-      if (item.action === 'emoji') window.electronAPI?.launchApp('/System/Applications/Utilities/Character Viewer.app');
     }
     onClose();
   }, [onClose, onOpenSettings, onToggleTheme, rememberApp, searchTerm]);
@@ -179,7 +269,7 @@ export default function Overlay({ isOpen, onClose, onOpenSettings, onToggleTheme
             <div className="launcher__search">
               <span className="icon">search</span>
               <input ref={inputRef} value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search apps, actions, or calculate…" autoFocus />
-              <span className="launcher__search-hint">⌃ Space</span>
+              <span className="launcher__search-hint">⌘⇧ Space</span>
             </div>
 
             <div className="launcher__toolbar">
@@ -195,6 +285,19 @@ export default function Overlay({ isOpen, onClose, onOpenSettings, onToggleTheme
               {visibleActions.length > 0 && <section className="launcher__section"><div className="launcher__section-title">{mode === 'actions' ? 'Command actions' : 'Quick actions'}</div><div className="launcher__action-grid">{visibleActions.map((action) => { const index = results.findIndex((result) => result.id === action.id); return <button key={action.id} className={`launcher-action launcher-action--${action.accent} ${index === selectedIndex ? 'launcher-action--selected' : ''}`} onClick={() => handleSelect({ type: 'action', ...action })} onMouseEnter={() => setSelectedIndex(index)}><span className="launcher-action__icon icon">{action.icon}</span><span className="launcher-action__copy"><strong>{action.name}</strong><small>{action.desc}</small></span><span className="icon launcher-action__arrow">arrow_outward</span></button>; })}</div></section>}
               {visibleApps.length > 0 && <section className="launcher__section"><div className="launcher__section-title">{searchTerm ? 'Applications' : 'Recent apps'}</div><div className="launcher__app-list">{visibleApps.map((app) => { const index = results.findIndex((result) => result.type === 'app' && result.path === app.path); return <button key={app.path} className={`launcher-item ${index === selectedIndex ? 'launcher-item--selected' : ''}`} onClick={() => handleSelect({ type: 'app', ...app })} onMouseEnter={() => setSelectedIndex(index)}><AppGlyph app={app} /><span className="launcher-item__text"><strong>{app.name}</strong><small>{app.path?.replace('/System/Applications', 'System') || 'Application'}</small></span><span className="icon launcher-item__arrow">arrow_forward</span></button>; })}</div></section>}
               {mode === 'files' && searchTerm && <button className={`launcher-item ${selectedIndex === results.length - 1 ? 'launcher-item--selected' : ''}`} onClick={() => handleSelect(results[results.length - 1])}><AppGlyph app={{ name: 'Folder', icon: 'folder_open' }} /><span className="launcher-item__text"><strong>Open “{searchTerm}”</strong><small>Open this path in Finder</small></span></button>}
+              {results.some((r) => r.type === 'web-search') && (
+                <button
+                  className={`launcher-item ${selectedIndex === results.findIndex((r) => r.type === 'web-search') ? 'launcher-item--selected' : ''}`}
+                  onClick={() => handleSelect(results.find((r) => r.type === 'web-search'))}
+                >
+                  <AppGlyph app={{ name: 'Web', icon: 'travel_explore' }} />
+                  <span className="launcher-item__text">
+                    <strong>Search the web for “{searchTerm}”</strong>
+                    <small>Open in default browser</small>
+                  </span>
+                  <span className="icon launcher-item__arrow">arrow_outward</span>
+                </button>
+              )}
               {!results.length && <div className="launcher__empty"><span className="icon">search_off</span><strong>No matches yet</strong><small>Try an app name or use &gt; for actions</small></div>}
             </div>
 

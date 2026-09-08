@@ -4,7 +4,7 @@
  */
 
 export const AiService = {
-  async sendMessage({ prompt, provider = 'ollama', apiKey = '', history = [] }) {
+  async sendMessage({ prompt, provider = 'ollama', apiKey = '' }) {
     if (!prompt.trim()) return null;
 
     if (provider === 'ollama') {
@@ -23,8 +23,7 @@ export const AiService = {
           return data.response;
         }
       } catch {
-        // Fallback demo response if Ollama is not running
-        return `🤖 [end4-pC AI Helper]\nTo connect local AI, make sure Ollama is running ('ollama run llama3') or provide a Gemini API key in Settings!`;
+        return 'Ollama is unavailable. Start it with `ollama run llama3` and try again.';
       }
     }
 
@@ -47,6 +46,6 @@ export const AiService = {
       }
     }
 
-    return `🤖 [end4-pC AI Helper]\nHello! I am your Material 3 desktop assistant. You asked: "${prompt}". Configure your API key in Settings to enable full live responses!`;
+    return 'No AI provider is configured.';
   },
 };

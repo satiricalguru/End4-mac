@@ -1,50 +1,64 @@
-const { exec } = require('child_process');
+const { runAppleScript } = require('./command.cjs');
 
-function runCommand(cmd) {
-  return new Promise((resolve) => {
-    exec(cmd, (err, stdout) => {
-      if (err) resolve('');
-      else resolve(stdout.trim());
-    });
-  });
+function audioIcon(volume, isMuted) {
+  if (isMuted || volume === 0) return 'volume_off';
+  if (volume < 33) return 'volume_mute';
+  if (volume < 66) return 'volume_down';
+  return 'volume_up';
+}
+
+function unavailableAudio(error) {
+  return {
+    volume: null,
+    isMuted: false,
+    icon: 'volume_off',
+    supported: false,
+    error,
+  };
 }
 
 const audioService = {
   async getAudio() {
-    try {
-      const volume = await runCommand(`osascript -e 'output volume of (get volume settings)'`);
-      const muted = await runCommand(`osascript -e 'output muted of (get volume settings)'`);
+    const [volumeResult, mutedResult] = await Promise.all([
+      runAppleScript('output volume of (get volume settings)'),
+      runAppleScript('output muted of (get volume settings)'),
+    ]);
 
-      const volumeLevel = parseInt(volume) || 0;
-      const isMuted = muted === 'true';
-
-      let icon = 'volume_up';
-      if (isMuted || volumeLevel === 0) icon = 'volume_off';
-      else if (volumeLevel < 33) icon = 'volume_mute';
-      else if (volumeLevel < 66) icon = 'volume_down';
-
-      return {
-        volume: volumeLevel,
-        isMuted,
-        icon,
-      };
-    } catch {
-      return { volume: 50, isMuted: false, icon: 'volume_up' };
+    if (!volumeResult.ok || !mutedResult.ok) {
+      return unavailableAudio(volumeResult.error || mutedResult.error || 'Audio status is unavailable.');
     }
+
+    const volume = Number.parseInt(volumeResult.stdout, 10);
+    const isMuted = mutedResult.stdout === 'true';
+    if (!Number.isFinite(volume)) return unavailableAudio('Audio volume had an unexpected value.');
+
+    return {
+      volume,
+      isMuted,
+      icon: audioIcon(volume, isMuted),
+      supported: true,
+      error: null,
+    };
   },
 
-  async setVolume(vol) {
-    const clamped = Math.max(0, Math.min(100, Math.round(vol)));
-    await runCommand(`osascript -e 'set volume output volume ${clamped}'`);
+  async setVolume(value) {
+    const numericValue = Number(value);
+    if (!Number.isFinite(numericValue)) return unavailableAudio('Volume must be a number.');
+
+    const clamped = Math.max(0, Math.min(100, Math.round(numericValue)));
+    const result = await runAppleScript(`set volume output volume ${clamped}`);
+    if (!result.ok) return unavailableAudio(result.error || 'Unable to set audio volume.');
     return this.getAudio();
   },
 
   async toggleMute() {
     const audio = await this.getAudio();
-    const newMuted = !audio.isMuted;
-    await runCommand(`osascript -e 'set volume output muted ${newMuted}'`);
+    if (!audio.supported) return audio;
+
+    const result = await runAppleScript(`set volume output muted ${!audio.isMuted}`);
+    if (!result.ok) return unavailableAudio(result.error || 'Unable to change mute state.');
     return this.getAudio();
   },
 };
 
-module.exports = { audioService };
+module.exports = { audioService, audioIcon };

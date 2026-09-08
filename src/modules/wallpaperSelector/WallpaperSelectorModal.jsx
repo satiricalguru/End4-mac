@@ -50,11 +50,33 @@ export default function WallpaperSelectorModal({ isOpen, onClose, wallpaperConfi
   const [onlineCategory, setOnlineCategory] = useState('general');
   const [onlineResults, setOnlineResults] = useState([]);
   const [loadingOnline, setLoadingOnline] = useState(false);
+  const [wallpaperStatus, setWallpaperStatus] = useState({ state: 'idle', message: 'Configuration persists on this Mac' });
   const curatedPresets = OnlineWallpapersService.getCuratedPresets();
 
   const updateShape = (changes) => onUpdateConfig({ centeredShape: { ...wallpaperConfig.centeredShape, ...changes } });
-  const selectImage = (url) => { onUpdateConfig({ mode: 'image', wallpaperUrl: url }); onExtractTheme?.(resolveAssetUrl(url)); };
-  const selectShader = (id) => onUpdateConfig({ mode: 'shader', shaderType: id });
+  const selectImage = async (url) => {
+    onUpdateConfig({ mode: 'image', wallpaperUrl: url });
+    onExtractTheme?.(resolveAssetUrl(url));
+
+    if (!window.electronAPI?.setWallpaper) {
+      setWallpaperStatus({ state: 'success', message: 'Shell background updated' });
+      return;
+    }
+
+    setWallpaperStatus({ state: 'loading', message: 'Applying to macOS desktop…' });
+    try {
+      const result = await window.electronAPI.setWallpaper(url);
+      setWallpaperStatus(result?.ok
+        ? { state: 'success', message: 'Shell and macOS wallpaper updated' }
+        : { state: 'error', message: result?.error || 'macOS wallpaper could not be updated' });
+    } catch (error) {
+      setWallpaperStatus({ state: 'error', message: error.message || 'macOS wallpaper could not be updated' });
+    }
+  };
+  const selectShader = (id) => {
+    onUpdateConfig({ mode: 'shader', shaderType: id });
+    setWallpaperStatus({ state: 'idle', message: 'Live scene applies to the shell window only' });
+  };
 
   const searchOnline = async () => {
     setLoadingOnline(true);
@@ -85,14 +107,14 @@ export default function WallpaperSelectorModal({ isOpen, onClose, wallpaperConfi
 
             {tab === 'online' && <div className="studio-view"><div className="studio-view-heading"><div><span className="studio-overline">Wallhaven explorer</span><h3>Find a new mood</h3></div><span className="studio-count">Public wallpapers</span></div><div className="browse-row"><div className="browse-input"><span className="icon">search</span><input placeholder="nature, anime, minimalist…" value={onlineQuery} onChange={(event) => setOnlineQuery(event.target.value)} onKeyDown={(event) => event.key === 'Enter' && searchOnline()} /></div><select value={onlineCategory} onChange={(event) => setOnlineCategory(event.target.value)}><option value="general">General</option><option value="anime">Anime</option><option value="people">People</option><option value="all">All</option></select><button className="studio-primary-button" onClick={searchOnline}><span className="icon icon-sm">{loadingOnline ? 'progress_activity' : 'search'}</span>{loadingOnline ? 'Searching' : 'Browse'}</button></div>{loadingOnline ? <div className="studio-empty"><span className="icon spin-icon">progress_activity</span><span>Finding good light…</span></div> : onlineResults.length ? <div className="wallpaper-grid">{onlineResults.map((wallpaper) => <WallpaperCard key={wallpaper.id} wallpaper={wallpaper} selected={wallpaperConfig.wallpaperUrl === wallpaper.full} onSelect={() => selectImage(wallpaper.full)} />)}</div> : <div className="studio-empty"><span className="icon">travel_explore</span><span>Search for a place, color, or feeling.</span></div>}</div>}
 
-            {tab === 'shaders' && <div className="studio-view"><div className="studio-view-heading"><div><span className="studio-overline">Live wallpaper engine</span><h3>Let the background breathe</h3></div>{currentScene && <span className="studio-count">Active · {currentScene.name}</span>}</div><div className="scene-grid">{SHADERS.map((scene) => <button key={scene.id} className={`scene-card ${wallpaperConfig.mode === 'shader' && wallpaperConfig.shaderType === scene.id ? 'scene-card--selected' : ''}`} onClick={() => selectShader(scene.id)}><div className={`scene-card__preview ${scene.className}`}><span className="icon icon-filled">{scene.icon}</span></div><div><strong>{scene.name}</strong><small>{scene.note}</small></div>{wallpaperConfig.mode === 'shader' && wallpaperConfig.shaderType === scene.id && <span className="icon scene-card__check">check</span>}</button>)}</div><div className="studio-note"><span className="icon">tips_and_updates</span><span>Live scenes are rendered locally on the canvas, so they stay smooth without a network connection.</span></div></div>}
+            {tab === 'shaders' && <div className="studio-view"><div className="studio-view-heading"><div><span className="studio-overline">Live wallpaper engine</span><h3>Let the background breathe</h3></div>{currentScene && <span className="studio-count">Active · {currentScene.name}</span>}</div><div className="scene-grid">{SHADERS.map((scene) => <button key={scene.id} className={`scene-card ${wallpaperConfig.mode === 'shader' && wallpaperConfig.shaderType === scene.id ? 'scene-card--selected' : ''}`} onClick={() => selectShader(scene.id)}><div className={`scene-card__preview ${scene.className}`}><span className="icon icon-filled">{scene.icon}</span></div><div><strong>{scene.name}</strong><small>{scene.note}</small></div>{wallpaperConfig.mode === 'shader' && wallpaperConfig.shaderType === scene.id && <span className="icon scene-card__check">check</span>}</button>)}</div><div className="studio-note"><span className="icon">tips_and_updates</span><span>Live scenes are rendered inside the shell window. macOS only supports still images as the native desktop wallpaper.</span></div></div>}
 
             {tab === 'shapes' && <div className="studio-view"><div className="studio-view-heading"><div><span className="studio-overline">Material 3 expressive</span><h3>Choose your center of gravity</h3></div><Toggle checked={wallpaperConfig.centeredShape.enabled} onChange={(enabled) => updateShape({ enabled })} /></div><div className="shape-grid">{SHAPES.map((shape) => <button key={shape.id} className={`shape-card ${wallpaperConfig.centeredShape.shape === shape.id ? 'shape-card--selected' : ''}`} onClick={() => updateShape({ shape: shape.id })}><div className="shape-card__visual"><span className={`shape-preview shape-preview--${shape.id.toLowerCase()}`} /></div><strong>{shape.name}</strong><small>{shape.note}</small></button>)}</div><div className="studio-controls"><label><span>Scale <b>{wallpaperConfig.centeredShape.size}px</b></span><input type="range" min="260" max="620" value={wallpaperConfig.centeredShape.size} onChange={(event) => updateShape({ size: Number(event.target.value) })} /></label><label><span>Presence <b>{Math.round(wallpaperConfig.centeredShape.opacity * 100)}%</b></span><input type="range" min="0" max="1" step="0.05" value={wallpaperConfig.centeredShape.opacity} onChange={(event) => updateShape({ opacity: Number(event.target.value) })} /></label><label className="studio-check-row"><span><b>Slow rotation</b><small>Subtle motion behind your work</small></span><Toggle checked={wallpaperConfig.centeredShape.rotate} onChange={(rotate) => updateShape({ rotate })} /></label></div></div>}
 
             {tab === 'widgets' && <div className="studio-view"><div className="studio-view-heading"><div><span className="studio-overline">Desktop widgets</span><h3>Keep the useful things close</h3></div><span className="studio-count">Saved automatically</span></div><div className="widget-options"><div className="widget-option widget-option--wide"><div className="widget-option__icon"><span className="icon">schedule</span></div><div><strong>Clock face</strong><small>Choose the hero widget on the desktop</small></div><select value={wallpaperConfig.clockStyle} onChange={(event) => onUpdateConfig({ clockStyle: event.target.value })}><option value="cookie">Cookie</option><option value="digital">Digital</option><option value="none">Hidden</option></select></div>{[{ key: 'showWeather', icon: 'partly_cloudy_day', name: 'Weather', note: 'Local conditions and forecast' }, { key: 'showVisualizer', icon: 'graphic_eq', name: 'Visualizer', note: 'A quiet pulse for playing audio' }, { key: 'showSystem', icon: 'memory', name: 'System meters', note: 'CPU and memory at a glance' }].map((widget) => <div className="widget-option" key={widget.key}><div className="widget-option__icon"><span className="icon">{widget.icon}</span></div><div><strong>{widget.name}</strong><small>{widget.note}</small></div><Toggle checked={wallpaperConfig[widget.key]} onChange={(value) => onUpdateConfig({ [widget.key]: value })} /></div>)}</div><div className="studio-controls"><label><span>Wallpaper dim <b>{wallpaperConfig.dim}%</b></span><input type="range" min="0" max="60" value={wallpaperConfig.dim} onChange={(event) => onUpdateConfig({ dim: Number(event.target.value) })} /></label><label><span>Background softness <b>{wallpaperConfig.blur}px</b></span><input type="range" min="0" max="18" value={wallpaperConfig.blur} onChange={(event) => onUpdateConfig({ blur: Number(event.target.value) })} /></label></div></div>}
           </main>
 
-          <footer className="studio-footer"><span><span className="icon icon-sm">cloud_done</span> Configuration persists on this Mac</span><button className="studio-done-button" onClick={onClose}>Done <span className="icon icon-sm">check</span></button></footer>
+          <footer className="studio-footer"><span className={`studio-footer__status studio-footer__status--${wallpaperStatus.state}`}><span className={`icon icon-sm ${wallpaperStatus.state === 'loading' ? 'spin-icon' : ''}`}>{wallpaperStatus.state === 'error' ? 'error' : wallpaperStatus.state === 'loading' ? 'progress_activity' : 'cloud_done'}</span>{wallpaperStatus.message}</span><button className="studio-done-button" onClick={onClose}>Done <span className="icon icon-sm">check</span></button></footer>
         </motion.div>
       </motion.div>
     </AnimatePresence>

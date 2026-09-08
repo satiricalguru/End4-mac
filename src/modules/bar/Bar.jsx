@@ -1,9 +1,7 @@
-import React, { useState, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useCallback } from 'react';
+import { motion } from 'framer-motion';
 import { useBattery, useAudio, useNetwork, useMedia, useDateTime, useWeather } from '../../hooks/useSystemData';
 import './Bar.css';
-
-const WORKSPACES = [1, 2, 3, 4, 5];
 
 export default function Bar({
   onToggleSidebarLeft,
@@ -11,7 +9,6 @@ export default function Bar({
   onToggleOverlay,
   onOpenWallpaperSettings,
 }) {
-  const [activeWorkspace, setActiveWorkspace] = useState(1);
   const dateTime = useDateTime();
   const { data: battery } = useBattery();
   const { data: audio, toggleMute } = useAudio();
@@ -50,15 +47,8 @@ export default function Bar({
 
           <div className="bar__divider" />
 
-          <div className="workspaces">
-            {WORKSPACES.map((ws) => (
-              <div
-                key={ws}
-                className={`workspace-dot ${ws === activeWorkspace ? 'workspace-dot--active' : ''}`}
-                onClick={() => setActiveWorkspace(ws)}
-                title={`Desktop ${ws}`}
-              />
-            ))}
+          <div className="workspaces" title="Current macOS Space">
+            <div className="workspace-dot workspace-dot--active" />
           </div>
         </div>
 
@@ -114,7 +104,9 @@ export default function Bar({
           {/* Network */}
           <div
             className="bar-widget"
-            title={network?.ssid ? `${network.ssid} (${network.signalStrength}%)` : 'No Wi-Fi'}
+            title={network?.isConnected
+              ? `${network.ssid || 'Connected Wi-Fi'}${Number.isFinite(network.signalStrength) ? ` (${network.signalStrength}%)` : ''}`
+              : network?.supported === false ? 'Wi-Fi status unavailable' : 'No Wi-Fi'}
           >
             <span className="icon" style={{ fontSize: 18 }}>
               {network?.icon || 'wifi'}
@@ -138,7 +130,7 @@ export default function Bar({
           <div
             className="bar-widget"
             onClick={onToggleSidebarRight}
-            title="Notification Center (⌘ + N)"
+            title="Notification Center (⌘⇧N)"
           >
             <span className="icon" style={{ fontSize: 20 }}>notifications</span>
           </div>
@@ -147,7 +139,7 @@ export default function Bar({
           <div
             className="bar-widget"
             onClick={onOpenWallpaperSettings}
-            title="Wallpaper Engine & Widgets (⌘ + ,)"
+            title="Wallpaper Engine & Widgets (⌘⇧,)"
           >
             <span className="icon" style={{ fontSize: 20, color: 'var(--md-primary)' }}>tune</span>
           </div>

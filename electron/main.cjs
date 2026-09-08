@@ -1,4 +1,5 @@
-const { app, BrowserWindow, ipcMain, Tray, Menu, globalShortcut, nativeTheme, screen, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, Tray, Menu, globalShortcut, nativeImage, nativeTheme, screen, shell } = require('electron');
+const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const { batteryService } = require('./services/battery.cjs');
@@ -8,40 +9,39 @@ const { mediaService } = require('./services/media.cjs');
 const { brightnessService } = require('./services/brightness.cjs');
 const { systemService } = require('./services/system.cjs');
 const { togglesService } = require('./services/toggles.cjs');
+const { wallpaperService } = require('./services/wallpaper.cjs');
 
 let mainWindow = null;
 let tray = null;
 
-const isDev = !app.isPackaged;
-
 function createWindow() {
-  const { width, height } = screen.getPrimaryDisplay().workAreaSize;
+  const { x, y, width, height } = screen.getPrimaryDisplay().workArea;
 
   mainWindow = new BrowserWindow({
-    width: width,
-    height: height,
-    x: 0,
-    y: 0,
+    width,
+    height,
+    x,
+    y,
     frame: false,
     transparent: true,
     hasShadow: false,
     resizable: true,
-    skipTaskbar: false,
+    skipTaskbar: true,
     alwaysOnTop: false,
-    visibleOnAllWorkspaces: true,
     vibrancy: 'under-window',
     visualEffectState: 'active',
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),
       contextIsolation: true,
       nodeIntegration: false,
-      sandbox: false,
+      sandbox: true,
     },
     show: false,
   });
 
-  // Enable interactive mouse events
-  mainWindow.setIgnoreMouseEvents(false);
+  mainWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+  mainWindow.setFocusable(false);
+  mainWindow.setIgnoreMouseEvents(true, { forward: true });
 
   // Load from Vite dev server if running, otherwise load production build
   const distPath = path.join(__dirname, '../dist/index.html');
@@ -56,51 +56,44 @@ function createWindow() {
   }
 
   mainWindow.once('ready-to-show', () => {
-    mainWindow.show();
+    mainWindow.showInactive();
   });
 
   // Safety fallback to ensure window shows
   setTimeout(() => {
     if (mainWindow && !mainWindow.isVisible()) {
-      mainWindow.show();
+      mainWindow.showInactive();
     }
   }, 1500);
+}
 
-  // Handle transparent click-through toggling from renderer
-  ipcMain.on('set-ignore-mouse', (_, ignore) => {
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.setIgnoreMouseEvents(ignore, { forward: true });
-    }
-  });
-
-  ipcMain.on('set-window-mode', (_, mode) => {
-    if (!mainWindow || mainWindow.isDestroyed()) return;
-    if (mode === 'desktop') {
-      mainWindow.setAlwaysOnTop(false);
-      mainWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
-      if (process.platform === 'darwin') {
-        mainWindow.setWindowButtonVisibility?.(false);
-      }
-    } else {
-      mainWindow.setAlwaysOnTop(true, 'floating');
-    }
-  });
+function showInteractivePanel(channel) {
+  if (!mainWindow || mainWindow.isDestroyed()) return;
+  mainWindow.setFocusable(true);
+  mainWindow.setIgnoreMouseEvents(false);
+  mainWindow.setAlwaysOnTop(true, 'floating');
+  mainWindow.show();
+  mainWindow.focus();
+  mainWindow.webContents.send(channel);
 }
 
 function createTray() {
-  const fs = require('fs');
-  const iconPath = path.join(__dirname, '../public/assets/tray-icon.png');
-  const fallbackPath = path.join(__dirname, '../src/assets/tray-icon.png');
-  const chosenPath = fs.existsSync(iconPath) ? iconPath : fs.existsSync(fallbackPath) ? fallbackPath : null;
+  const iconCandidates = [
+    path.join(__dirname, '../dist/assets/tray-icon.png'),
+    path.join(__dirname, '../public/assets/tray-icon.png'),
+    path.join(__dirname, '../src/assets/tray-icon.png'),
+  ];
+  const chosenPath = iconCandidates.find((candidate) => fs.existsSync(candidate));
 
   if (!chosenPath) return;
 
   try {
-    tray = new Tray(chosenPath);
+    const trayIcon = nativeImage.createFromPath(chosenPath).resize({ width: 18, height: 18 });
+    trayIcon.setTemplateImage(true);
+    tray = new Tray(trayIcon);
     const contextMenu = Menu.buildFromTemplate([
-      { label: 'Show / Focus Shell', click: () => { mainWindow?.show(); mainWindow?.focus(); } },
-      { label: 'Wallpaper & Widget Settings', click: () => mainWindow?.webContents.send('toggle-settings') },
-      { label: 'Spotlight Launcher', click: () => mainWindow?.webContents.send('toggle-overlay') },
+      { label: 'Show Launcher', click: () => showInteractivePanel('toggle-overlay') },
+      { label: 'Wallpaper & Widget Settings', click: () => showInteractivePanel('toggle-settings') },
       { type: 'separator' },
       { label: 'Quit end4-pC', click: () => app.quit() },
     ]);
@@ -112,25 +105,25 @@ function createTray() {
 }
 
 function registerGlobalShortcuts() {
-  // Toggle launcher overlay
-  globalShortcut.register('Control+Space', () => {
-    mainWindow?.webContents.send('toggle-overlay');
-  });
+  const shortcuts = [
+    ['CommandOrControl+Shift+Space', 'toggle-overlay'],
+    ['CommandOrControl+Shift+A', 'toggle-sidebar-left'],
+    ['CommandOrControl+Shift+N', 'toggle-sidebar-right'],
+    ['CommandOrControl+Shift+,', 'toggle-settings'],
+  ];
 
-  // Toggle left sidebar
-  globalShortcut.register('Super+A', () => {
-    mainWindow?.webContents.send('toggle-sidebar-left');
-  });
+  for (const [accelerator, channel] of shortcuts) {
+    if (!globalShortcut.register(accelerator, () => showInteractivePanel(channel))) {
+      console.warn(`Global shortcut unavailable: ${accelerator}`);
+    }
+  }
+}
 
-  // Toggle right sidebar
-  globalShortcut.register('Super+N', () => {
-    mainWindow?.webContents.send('toggle-sidebar-right');
-  });
-
-  // Toggle settings
-  globalShortcut.register('Super+Escape', () => {
-    mainWindow?.webContents.send('toggle-settings');
-  });
+function isAllowedApplicationPath(targetPath) {
+  if (typeof targetPath !== 'string' || !path.isAbsolute(targetPath) || !targetPath.endsWith('.app')) return false;
+  const normalized = path.resolve(targetPath);
+  const roots = ['/Applications', '/System/Applications', '/System/Library/CoreServices', path.join(os.homedir(), 'Applications')];
+  return roots.some((root) => normalized.startsWith(`${path.resolve(root)}${path.sep}`));
 }
 
 function registerIPCHandlers() {
@@ -155,29 +148,50 @@ function registerIPCHandlers() {
   ipcMain.handle('toggle-bluetooth', (_, enable) => togglesService.toggleBluetooth(enable));
   ipcMain.handle('toggle-dnd', () => togglesService.toggleDnd());
 
-  // Wallpaper handler
-  ipcMain.handle('set-wallpaper', async (_, filePath) => {
-    const { exec } = require('child_process');
-    return new Promise((resolve, reject) => {
-      exec(`osascript -e 'tell application "Finder" to set desktop picture to POSIX file "${filePath}"'`, (err) => {
-        if (err) reject(err);
-        else resolve(true);
-      });
-    });
-  });
+  ipcMain.handle('set-wallpaper', (_, source) => wallpaperService.setWallpaper(source, {
+    appPath: app.getAppPath(),
+    userDataPath: app.getPath('userData'),
+  }));
 
   // App launcher
   ipcMain.handle('get-applications', () => systemService.getApplications());
-  ipcMain.handle('launch-app', (_, appPath) => {
-    const { exec } = require('child_process');
-    exec(`open "${appPath}"`);
+  ipcMain.handle('launch-app', async (_, appPath) => {
+    if (!isAllowedApplicationPath(appPath)) return { ok: false, error: 'Application path is not allowed' };
+    const error = await shell.openPath(appPath);
+    return error ? { ok: false, error } : { ok: true };
   });
   ipcMain.handle('open-path', (_, targetPath) => {
     if (!targetPath || typeof targetPath !== 'string') return false;
     const expandedPath = targetPath.startsWith('~/')
       ? path.join(os.homedir(), targetPath.slice(2))
-      : targetPath;
+      : path.isAbsolute(targetPath) ? targetPath : path.join(os.homedir(), targetPath);
     return shell.openPath(expandedPath);
+  });
+  ipcMain.handle('open-external', async (_, targetUrl) => {
+    try {
+      const url = new URL(targetUrl);
+      if (!['https:', 'http:'].includes(url.protocol)) return false;
+      await shell.openExternal(url.toString());
+      return true;
+    } catch {
+      return false;
+    }
+  });
+
+  ipcMain.on('set-ignore-mouse', (_, ignore) => {
+    if (!mainWindow || mainWindow.isDestroyed() || typeof ignore !== 'boolean') return;
+    mainWindow.setIgnoreMouseEvents(ignore, { forward: true });
+  });
+  ipcMain.on('set-always-on-top', (_, flag) => {
+    if (!mainWindow || mainWindow.isDestroyed() || typeof flag !== 'boolean') return;
+    mainWindow.setAlwaysOnTop(flag, flag ? 'floating' : 'normal');
+  });
+  ipcMain.on('set-window-mode', (_, mode) => {
+    if (!mainWindow || mainWindow.isDestroyed() || !['desktop', 'interactive'].includes(mode)) return;
+    const interactive = mode === 'interactive';
+    mainWindow.setFocusable(interactive);
+    mainWindow.setAlwaysOnTop(interactive, interactive ? 'floating' : 'normal');
+    mainWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
   });
 
   // Dark mode
@@ -190,6 +204,8 @@ function registerIPCHandlers() {
   ipcMain.handle('get-screen-info', () => {
     const display = screen.getPrimaryDisplay();
     return {
+      x: display.workArea.x,
+      y: display.workArea.y,
       width: display.workAreaSize.width,
       height: display.workAreaSize.height,
       scaleFactor: display.scaleFactor,
@@ -199,11 +215,12 @@ function registerIPCHandlers() {
 
 // App lifecycle
 app.whenReady().then(() => {
+  app.dock?.hide();
+  registerIPCHandlers();
   createWindow();
   // Tray icon is optional, skip if icon file doesn't exist
-  try { createTray(); } catch (e) { console.log('Tray icon not found, skipping tray'); }
+  try { createTray(); } catch { console.log('Tray icon not found, skipping tray'); }
   registerGlobalShortcuts();
-  registerIPCHandlers();
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();

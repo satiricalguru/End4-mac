@@ -38,14 +38,18 @@ export default function DesktopWidgetsContainer({
         }}
       >
         {clockStyle === 'cookie' && (
-          <CookieClockWidget size={240} sides={7} onClick={onOpenSelector} />
+          <div data-shell-interactive="true">
+            <CookieClockWidget size={240} sides={7} onClick={onOpenSelector} />
+          </div>
         )}
         {clockStyle === 'digital' && (
-          <DigitalClockWidget onClick={onOpenSelector} />
+          <div data-shell-interactive="true">
+            <DigitalClockWidget onClick={onOpenSelector} />
+          </div>
         )}
 
         {showWeather && (
-          <div style={{ pointerEvents: 'auto' }}>
+          <div data-shell-interactive="true" style={{ pointerEvents: 'auto' }}>
             <DesktopWeatherWidget />
           </div>
         )}
@@ -61,13 +65,13 @@ export default function DesktopWidgetsContainer({
         }}
       >
         {showVisualizer && (
-          <div style={{ pointerEvents: 'auto' }}>
+          <div data-shell-interactive="true" style={{ pointerEvents: 'auto' }}>
             <VisualizerWidget width={320} height={80} />
           </div>
         )}
 
         {showSystem && (
-          <div style={{ pointerEvents: 'auto' }}>
+          <div data-shell-interactive="true" style={{ pointerEvents: 'auto' }}>
             <DesktopSystemWidget />
           </div>
         )}
